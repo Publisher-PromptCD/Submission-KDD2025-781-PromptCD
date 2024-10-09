@@ -7,10 +7,11 @@ import pandas as pd
 import numpy as np
 import argparse
 #----------------------------------------------------------------------
-# 创建命令行解析器
+
+# Create a command line parser
 parser = argparse.ArgumentParser(description='Description of your program')
 
-# 添加命令行参数
+# Add command line arguments
 parser.add_argument('--rate', type=float, default=0.2, help='Description of rate parameter')
 parser.add_argument('--pp_dim', type=int, default=20, help='Description of pp_dim parameter')
 parser.add_argument('--batch_size', type=int, default=256, help='Description of batch_size parameter')
@@ -18,15 +19,15 @@ parser.add_argument('--latent_dim', type=int, default=1, help='Description of la
 parser.add_argument('--model_file', type=str, default="source_model/cross_subject/irt/temp.pth", help='')
 parser.add_argument('--target_model_file', type=str, default="target_model/cross_subject/irt/temp.pth", help='')
 parser.add_argument('--if_source_train', type=int, default=0, help='Description of if_source_train parameter')
-parser.add_argument('--if_target_migration', type=int, default=2, help='0--Origin ，1--ours ，2--ours++')
+parser.add_argument('--if_target_migration', type=int, default=2, help='0--Origin, 1--ours, 2--ours++')
 parser.add_argument('--folder', type=str, default='data1/交叉2+1/c_h+p', help='Description of folder parameter')
 parser.add_argument('--source', type=str, default='chi,his', help='Description of source parameter')
 parser.add_argument('--target', type=str, default='phy', help='Description of target parameter')
 
-# 解析命令行参数
+# Parse command line arguments
 args = parser.parse_args()
 
-# 现在可以通过 args 对象来访问命令行参数
+# You can now access the command line parameters through the args object
 rate = args.rate
 pp_dim = args.pp_dim
 batch_size = args.batch_size
@@ -39,12 +40,14 @@ source = args.source
 target = args.target
 target_model_file = args.target_model_file
 #---------------------------------------------------------------------
-#整个模型训练过程分为两个阶段：1、在多个源域上进行训练  2、在目标域上进行微调、测试
-# 读取阶段一数据
+# The entire model training process is divided into two stages:
+# 1. Train on multiple source domains
+# 2. Fine-tune and test on the target domain
+# Load data for stage one
 Source_data = {}
 for source_name in source.split(','):
     Source_data[source_name] = pd.read_csv(f"{folder}/{source_name}.csv")
-# 读取阶段二数据
+# Load data for stage two
 Target = pd.read_csv(f"{folder}/{target}.csv")
 
 #----------------------------------------------------------------------
@@ -53,6 +56,7 @@ Source_train, Source_test = train_test_split(Source_df, test_size=0.2, random_st
 Source_train.reset_index(inplace=True, drop=True)
 Source_test.reset_index(inplace=True, drop=True)
 
+# Select a subset of users for fine-tuning based on the specified rate
 exer_set = Target["user_id"].drop_duplicates()
 rand_stu = exer_set.sample(frac=rate, random_state=2024)
 Target_fine_tuning = Target[Target["user_id"].isin(rand_stu)]
@@ -60,14 +64,14 @@ Target_test = Target[~Target["user_id"].isin(rand_stu)]
 Target_fine_tuning.reset_index(inplace=True, drop=True)
 Target_test.reset_index(inplace=True, drop=True)
 
-#对 Target_fine_tuning 进行 9:1 划分
+# Split Target_fine_tuning into 90% training and 10% validation
 Target_train, Target_val = train_test_split(Target_fine_tuning, test_size=0.1, random_state=42)
 Target_train.reset_index(inplace=True, drop=True)
 Target_val.reset_index(inplace=True, drop=True)
 
 user_id_list = Target_fine_tuning['user_id'].unique().tolist()
 
-# 计算每个源数据的项目范围
+# Calculate the item range for each source domain
 source_ranges = {}
 for source_name, source_df in Source_data.items():
     source_ranges[source_name] = [source_df['item_id'].min(), source_df['item_id'].max()]
@@ -79,7 +83,7 @@ t_item_n = np.max([np.max(Target_fine_tuning['item_id']), np.max(Target_test['it
 
 
 def transform1(x, y, z, k, batch_size, **params):
-    # 转换逻辑：将原来的 x 用 x + k * x.max 替代
+    # Transformation logic: replace the original x with x + k * x.max
     x_transformed = x + k * x.max()
 
     dataset = TensorDataset(
@@ -99,7 +103,7 @@ def transform2(x, y, z, batch_size, **params):
 
 
 s_train_set, s_test_set = [
-    transform1(data["user_id"], data["item_id"], data["score"], data["Source_id"],batch_size)
+    transform1(data["user_id"], data["item_id"], data["score"], data["Source_id"], batch_size)
     for data in [Source_train, Source_test]
 ]
 
@@ -114,79 +118,79 @@ cdm = IRT(user_n, s_item_n, t_item_n, latent_dim, pp_dim, source_range,
            model_file, target_model_file)  # user_num, s_item_num, t_item_num, latent_dim, pp_dim, s1_r, s2_r
 
 if if_source_train == 1:
-    # 将源域训练开始提示输出到文件
+    # Output source domain training start message to file
     with open("record.txt", "a") as f:
         f.write(f"------------------------------------------------------\n"
                 f"IRT Source domain training\n"
                 f"Source: {source}, Target: {target}\n")
-    # 在源域上训练
+    # Train on source domain
     cdm.Source_train(s_train_set, s_test_set, device="cuda")
-    # 将源域训练训练结束提示输出到控制台和文件
+    # Output source domain training completed message to console and file
     with open("record.txt", "a") as f:
         f.write("-------------------------------------------------------\n")
     logging.info("Source domain training completed. ")
 
 if if_target_migration == 1:
-    # 迁移
+    # Transfer parameters
     cdm.Transfer_parameters(cdm.t_irt_net, source_range)
     logging.info("Transfer parameters to the target domain completed.")
-    # 将目标域训练开始提示输出到文件
+    # Output target domain training start message to file
     with open("record.txt", "a") as f:
         f.write(f"------------------------------------------------------\n"
                 f"IRT--our\n"
                 f"Source: {source}, Target: {target}\n")
-    # 目标域训练
+    # Train on target domain
     cdm.Target_train(cdm.t_irt_net, t_train_set, t_val_set, epoch=100, device="cuda")
     #cdm.recommendation()
     logging.info("Target domain training completed.")
-    # 测试
+    # Test the model
     cdm.t_irt_net.load_state_dict(torch.load(target_model_file))
 
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net,t_test_set)
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net, t_test_set)
 
-    # 将最佳指标输出到文件
+    # Output the best metrics to file
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))
         f.write("-------------------------------------------------------\n")
 
 elif if_target_migration == 2:
-    # 迁移
+    # Transfer parameters
     cdm.Transfer_parameters(cdm.t_irt_net2, source_range)
     logging.info("Transfer parameters to the target domain completed.")
-    # 将目标域训练开始提示输出到文件
+    # Output target domain training start message to file
     with open("record.txt", "a") as f:
         f.write(f"-------------------------------------------------------\n"
                 f"IRT--our++\n"
                 f"Source: {source}, Target: {target}\n")
-    # 目标域训练
+    # Train on target domain
     cdm.Target_train(cdm.t_irt_net2, t_train_set, t_val_set, epoch=100, device="cuda")
     logging.info("Target domain training completed.")
-    # 测试
+    # Test the model
     cdm.t_irt_net2.load_state_dict(torch.load(target_model_file))
 
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net2,t_test_set)
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net2, t_test_set)
 
-    # 将最佳指标输出到文件
+    # Output the best metrics to file
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))
         f.write("-------------------------------------------------------\n")
 else:
-    # 将目标域训练开始提示输出到文件
+    # Output target domain training start message to file
     with open("record.txt", "a") as f:
         f.write(f"-------------------------------------------------------\n"
                 f"IRT-Origin\n"
                 f"Source: {source}, Target: {target}\n")
-    # 目标域训练
+    # Train on target domain
     cdm.Target_train(cdm.t_irt_net, t_train_set, t_val_set, epoch=100, device="cuda")
     logging.info("Target domain training completed.")
-    # 测试
+    # Test the model
     cdm.t_irt_net.load_state_dict(torch.load(target_model_file))
 
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net,t_test_set)
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.t_irt_net, t_test_set)
 
-    # 将最佳指标输出到文件
+    # Output the best metrics to file
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))

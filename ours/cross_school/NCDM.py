@@ -36,26 +36,26 @@ class Transform_Exr(nn.Module):
         self.overall_diff_emb = nn.Embedding(exer_num, pp_dim)
 
     def forward(self, x, exer_id):
-        # 将向量加到输入数据上
+        # Add the vector to the input data
         overall_diff_x = self.overall_diff_emb(exer_id)
         output = torch.cat([overall_diff_x, x], dim=1)
         return output
 
 class Target_Transform_stu(nn.Module):
-    def __init__(self, pp_dim,s_ranges):
+    def __init__(self, pp_dim, s_ranges):
         super(Target_Transform_stu, self).__init__()
         self.s_stu_vectors = nn.ParameterList([nn.Parameter(torch.rand(pp_dim)) for _ in range(len(s_ranges))])
-        #垂直拼接过一维卷积
-        self.Conv = ConvolutionalTransform(pp_dim,input_channels=len(s_ranges))
-        # 水平拼接过mlp
-        #self.mlp = SimpleMLP(pp_dim * len(s_ranges), 10, pp_dim)
+        # Vertically concatenate through 1D convolution
+        self.Conv = ConvolutionalTransform(pp_dim, input_channels=len(s_ranges))
+        # Horizontally concatenate through MLP
+        # self.mlp = SimpleMLP(pp_dim * len(s_ranges), 10, pp_dim)
 
     def forward(self, x):
-        # 将向量加到输入数据上
-        #垂直拼接
+        # Add vectors to input data
+        # Vertical concatenation
         stu_vectors = torch.cat([vector.unsqueeze(0) for vector in self.s_stu_vectors], dim=0)
         new_stu_vector = self.Conv(stu_vectors)
-        #水平拼接
+        # Horizontal concatenation
         # stu_vectors = torch.cat([vector.unsqueeze(0) for vector in self.s_stu_vectors], dim=1)
         # new_stu_vector = self.mlp(stu_vectors)
 
@@ -66,54 +66,53 @@ class ConvolutionalTransform(nn.Module):
     def __init__(self, fc_out_features, input_channels=3, output_channels=1, kernel_size=1, stride=1, padding=0):
         super(ConvolutionalTransform, self).__init__()
         self.conv1 = nn.Conv1d(input_channels, output_channels, kernel_size, stride, padding)
-        #self.MLP = SimpleMLP(fc_out_features,10,fc_out_features)
-        #self.fc = nn.Linear(fc_out_features, fc_out_features)
+        # self.MLP = SimpleMLP(fc_out_features, 10, fc_out_features)
+        # self.fc = nn.Linear(fc_out_features, fc_out_features)
 
     def forward(self, x):
         x = self.conv1(x)
-        #x = F.relu(x)
-        # 将输出展平成一维张量，以便输入全连接层
-        x = x.view(x.size(0), -1)  # -1 表示自动推断大小
-        #x = self.MLP(x)
-        #x = self.fc(x)
+        # x = F.relu(x)
+        # Flatten the output to a one-dimensional tensor for input into the fully connected layer
+        x = x.view(x.size(0), -1)  # -1 indicates automatic size inference
+        # x = self.MLP(x)
+        # x = self.fc(x)
         return x
 
 class Source_Net(nn.Module):
-    # knowledge_n 是用来训练学科中知识点之和、exer_n 和 student_n还是按总数算
-    def __init__(self, knowledge_n, exer_n, student_n,pp_dim,s_ranges):
+    # knowledge_n is used to train the sum of knowledge points in the subject, and exer_n and student_n are calculated based on total numbers
+    def __init__(self, knowledge_n, exer_n, student_n, pp_dim, s_ranges):
+        super(Source_Net, self).__init__()
         self.pp_dim = pp_dim
         self.knowledge_dim = knowledge_n
         self.exer_n = exer_n
         self.emb_num = student_n
         self.stu_dim = self.knowledge_dim
-        self.prednet_input_len = self.knowledge_dim +self.pp_dim
+        self.prednet_input_len = self.knowledge_dim + self.pp_dim
         self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
 
-        super(Source_Net, self).__init__()
-
-        # prediction sub-net
+        # Prediction sub-net
         self.student_emb = nn.Parameter(torch.rand((self.emb_num, self.stu_dim)))
         nn.init.xavier_uniform_(self.student_emb)
         self.s_stu_vectors = nn.ParameterList([nn.Parameter(torch.rand(pp_dim)) for _ in range(len(s_ranges))])
 
         self.k_difficulty = nn.ParameterList([nn.Parameter(torch.randn(self.exer_n, self.knowledge_dim))
-                                       for _ in range(len(s_ranges))])
-        # 对每个参数进行 Xavier 均匀初始化
+                                               for _ in range(len(s_ranges))])
+        # Perform Xavier uniform initialization for each parameter
         for k in self.k_difficulty:
             nn.init.xavier_uniform_(k)
         self.prompt_k_difficulty = nn.Parameter(torch.randn(self.exer_n, self.pp_dim))
         nn.init.xavier_uniform_(self.prompt_k_difficulty)
 
         self.e_difficulty = nn.ParameterList([nn.Parameter(torch.randn(self.exer_n, 1))
-                                       for _ in range(len(s_ranges))])
-        # 对每个参数进行 Xavier 均匀初始化
+                                               for _ in range(len(s_ranges))])
+        # Perform Xavier uniform initialization for each parameter
         for e in self.e_difficulty:
             nn.init.xavier_uniform_(e)
         self.prompt_e_difficulty = nn.Parameter(torch.randn(self.exer_n, 1))
         nn.init.xavier_uniform_(self.prompt_e_difficulty)
-        #self.e_difficulty = nn.Embedding(self.exer_n, 1)
-        #--------------------------------------------------
+        # self.e_difficulty = nn.Embedding(self.exer_n, 1)
+        # --------------------------------------------------
         self.prednet_full1 = PosLinear(self.knowledge_dim, self.prednet_len1)
         self.drop_1 = nn.Dropout(p=0.5)
         self.prednet_full2 = PosLinear(self.prednet_len1, self.prednet_len2)
@@ -124,40 +123,38 @@ class Source_Net(nn.Module):
         self.fc2 = nn.Linear(self.prednet_input_len, self.knowledge_dim)
         self.fc3 = nn.Linear(1 + 1, 1)
 
-        # initialize
+        # Initialize weights
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_exercise2, input_knowledge_point):
-        # new_e_difficulty = self.e_difficulty(input_exercise)
-        # new_e_difficulty = torch.sigmoid(new_e_difficulty)
-        # 将参数 prompt_a 重复 n 次
+        # Repeat the prompt_e_difficulty parameter n times
         prompt_e_repeated = self.prompt_e_difficulty.repeat(len(self.s_ranges), 1)
-        # 将列表中的每个元素垂直拼接起来
+        # Vertically concatenate each element in the list
         e_concatenated = torch.cat([e for e in self.e_difficulty], dim=0)
-        # 水平拼接两个张量
+        # Horizontally concatenate two tensors
         new_e_difficulty = torch.cat([prompt_e_repeated, e_concatenated], dim=1)
         new_e_difficulty = torch.index_select(new_e_difficulty, dim=0, index=input_exercise2)
         new_e_difficulty = torch.sigmoid(self.fc3(new_e_difficulty))
 
         temp_vectors = torch.cat(
             [vector.repeat(r[1] - r[0] + 1, 1) for vector, r in zip(self.s_stu_vectors, self.s_ranges)], dim=0)
-        new_stu_emb  = torch.cat([temp_vectors,self.student_emb], dim=1)
-        sta_emb = torch.index_select(new_stu_emb,dim=0,index=stu_id)
+        new_stu_emb = torch.cat([temp_vectors, self.student_emb], dim=1)
+        sta_emb = torch.index_select(new_stu_emb, dim=0, index=stu_id)
         com_sta_emb = torch.sigmoid(self.fc1(sta_emb))
-        #----------------------------------------------------------------
-        # 将参数 prompt_a 重复 n 次
+        # ----------------------------------------------------------------
+        # Repeat the prompt_k_difficulty parameter n times
         prompt_k_repeated = self.prompt_k_difficulty.repeat(len(self.s_ranges), 1)
-        # 将列表中的每个元素垂直拼接起来
+        # Vertically concatenate each element in the list
         k_concatenated = torch.cat([k for k in self.k_difficulty], dim=0)
-        # 水平拼接两个张量
+        # Horizontally concatenate two tensors
         new_k_difficulty = torch.cat([prompt_k_repeated, k_concatenated], dim=1)
         new_k_difficulty = torch.index_select(new_k_difficulty, dim=0, index=input_exercise2)
         com_k_difficulty = torch.sigmoid(self.fc2(new_k_difficulty))
 
-        #----------------------------------------------------------------
-        # prednet
+        # ----------------------------------------------------------------
+        # Prediction network
         input_x = new_e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -165,11 +162,11 @@ class Source_Net(nn.Module):
 
         return output_1.view(-1)
 
-
 class Target_Net(nn.Module):
-#train_knowledge_n 是训练时最大的知识点数量, knowledge_n 是现在学科的最大知识点
-# exer_n 是目标领域的练习题数量, student 与之前一样
-    def __init__(self,train_knowledge_n, knowledge_n, exer_n, student_n,s_ranges,pp_dim):
+    # train_knowledge_n is the maximum number of knowledge points during training, knowledge_n is the current subject's maximum knowledge points
+    # exer_n is the number of exercises in the target domain, student remains the same as before
+    def __init__(self, train_knowledge_n, knowledge_n, exer_n, student_n, s_ranges, pp_dim):
+        super(Target_Net, self).__init__()
         self.pp_dim = pp_dim
         self.train_knowledge_dim = train_knowledge_n
         self.knowledge_dim = knowledge_n
@@ -180,13 +177,12 @@ class Target_Net(nn.Module):
         self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
 
-        super(Target_Net, self).__init__()
-        # prediction sub-net
+        # Prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.knowledge_dim)
         self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
         self.e_difficulty = nn.Embedding(self.exer_n, 1)
         # --------------------------------------------------
-        self.transform_layer_stu = Target_Transform_stu(self.pp_dim,self.s_ranges)
+        self.transform_layer_stu = Target_Transform_stu(self.pp_dim, self.s_ranges)
         self.prompt_e_difficulty = nn.Embedding(self.exer_n, 1)
         self.prompt_k_difficulty = nn.Embedding(self.exer_n, self.pp_dim)
         # --------------------------------------------------
@@ -200,16 +196,16 @@ class Target_Net(nn.Module):
         self.fc2 = nn.Linear(self.prednet_input_len, self.knowledge_dim)
         self.fc3 = nn.Linear(1 + 1, 1)
 
-        # initialize
+        # Initialize weights
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # before prednet
+        # Before prediction network
         stu_emb = self.student_emb(stu_id)
         k_difficulty = self.k_difficulty(input_exercise)
-        e_difficulty = self.e_difficulty(input_exercise) # * 10
+        e_difficulty = self.e_difficulty(input_exercise)  # * 10
         # ----------------------------------------------------------------
         com_sta_emb = self.transform_layer_stu(stu_emb)
         com_sta_emb = torch.sigmoid(self.fc1(com_sta_emb))
@@ -222,7 +218,7 @@ class Target_Net(nn.Module):
         new_e_difficulty = torch.cat([p_e, e_difficulty], dim=1)
         new_e_difficulty = torch.sigmoid(self.fc3(new_e_difficulty))
         # ----------------------------------------------------------------
-        # prednet
+        # Prediction network
         input_x = new_e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -232,7 +228,8 @@ class Target_Net(nn.Module):
 
 class Target_Net2(nn.Module):
 
-    def __init__(self,train_knowledge_n, knowledge_n, exer_n, student_n,s_ranges,pp_dim):
+    def __init__(self, train_knowledge_n, knowledge_n, exer_n, student_n, s_ranges, pp_dim):
+        super(Target_Net2, self).__init__()
         self.pp_dim = pp_dim
         self.train_knowledge_dim = train_knowledge_n
         self.knowledge_dim = knowledge_n
@@ -243,15 +240,14 @@ class Target_Net2(nn.Module):
         self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
 
-        super(Target_Net2, self).__init__()
-        # prediction sub-net
+        # Prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.knowledge_dim)
-        #self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
-        self.generalize_layer_k = nn.Linear(self.pp_dim , self.knowledge_dim)
-        #self.e_difficulty = nn.Embedding(self.exer_n, 1)
+        # self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
+        self.generalize_layer_k = nn.Linear(self.pp_dim, self.knowledge_dim)
+        # self.e_difficulty = nn.Embedding(self.exer_n, 1)
         self.generalize_layer_e = nn.Linear(1, 1)
         # --------------------------------------------------
-        self.transform_layer_stu = Target_Transform_stu(self.pp_dim,self.s_ranges)
+        self.transform_layer_stu = Target_Transform_stu(self.pp_dim, self.s_ranges)
         self.prompt_e_difficulty = nn.Embedding(self.exer_n, 1)
         self.prompt_k_difficulty = nn.Embedding(self.exer_n, self.pp_dim)
         # --------------------------------------------------
@@ -263,18 +259,18 @@ class Target_Net2(nn.Module):
         #
         self.fc1 = nn.Linear(self.prednet_input_len, self.knowledge_dim)
         self.fc2 = nn.Linear(self.prednet_input_len, self.knowledge_dim)
-        self.fc3 = nn.Linear(1+ 1, 1)
+        self.fc3 = nn.Linear(1 + 1, 1)
 
-        # initialize
+        # Initialize weights
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # before prednet
+        # Before prediction network
         stu_emb = self.student_emb(stu_id)
-        #k_difficulty = self.k_difficulty(input_exercise)
-        #e_difficulty = self.e_difficulty(input_exercise) # * 10
+        # k_difficulty = self.k_difficulty(input_exercise)
+        # e_difficulty = self.e_difficulty(input_exercise)  # * 10
         # ----------------------------------------------------------------
         com_sta_emb = self.transform_layer_stu(stu_emb)
         com_sta_emb = torch.sigmoid(self.fc1(com_sta_emb))
@@ -289,7 +285,7 @@ class Target_Net2(nn.Module):
         new_e_difficulty = torch.cat([p_e, e_difficulty], dim=1)
         new_e_difficulty = torch.sigmoid(self.fc3(new_e_difficulty))
         # ----------------------------------------------------------------
-        # prednet
+        # Prediction network
         input_x = new_e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -300,6 +296,7 @@ class Target_Net2(nn.Module):
 class Net(nn.Module):
 
     def __init__(self, knowledge_n, exer_n, student_n):
+        super(Net, self).__init__()
         self.knowledge_dim = knowledge_n
         self.exer_n = exer_n
         self.emb_num = student_n
@@ -307,9 +304,7 @@ class Net(nn.Module):
         self.prednet_input_len = self.knowledge_dim
         self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
 
-        super(Net, self).__init__()
-
-        # prediction sub-net
+        # Prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.stu_dim)
         self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
         self.e_difficulty = nn.Embedding(self.exer_n, 1)
@@ -319,18 +314,18 @@ class Net(nn.Module):
         self.drop_2 = nn.Dropout(p=0.5)
         self.prednet_full3 = PosLinear(self.prednet_len2, 1)
 
-        # initialize
+        # Initialize weights
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # before prednet
+        # Before prediction network
         stu_emb = self.student_emb(stu_id)
         stat_emb = torch.sigmoid(stu_emb)
         k_difficulty = torch.sigmoid(self.k_difficulty(input_exercise))
         e_difficulty = torch.sigmoid(self.e_difficulty(input_exercise))  # * 10
-        # prednet
+        # Prediction network
         input_x = e_difficulty * (stat_emb - k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -342,11 +337,11 @@ class Net(nn.Module):
 class NCDM:
     '''Neural Cognitive Diagnosis Model'''
 
-    def __init__(self, knowledge_n, exer_n, s_stu_n, t_stu_n, pp_dim,s_ranges,model_file, target_model_file):
+    def __init__(self, knowledge_n, exer_n, s_stu_n, t_stu_n, pp_dim, s_ranges, model_file, target_model_file):
         super(NCDM, self).__init__()
         self.model_file = model_file
         self.target_model_file = target_model_file
-        self.ncdm_s_net = Source_Net(knowledge_n, exer_n, s_stu_n, pp_dim,s_ranges)
+        self.ncdm_s_net = Source_Net(knowledge_n, exer_n, s_stu_n, pp_dim, s_ranges)
         self.ncdm_t_net = Target_Net(knowledge_n, knowledge_n, exer_n, t_stu_n, s_ranges, pp_dim)
         self.ncdm_t_net2 = Target_Net2(knowledge_n, knowledge_n, exer_n, t_stu_n, s_ranges, pp_dim)
 
@@ -365,9 +360,9 @@ class NCDM:
             epoch_losses = []
             batch_count = 0
 
-            for batch_data in tqdm(train_data, "Epoch %s" % epoch):
+            for batch_data in tqdm(train_data, f"Epoch {epoch}"):
                 batch_count += 1
-                user_id, item_id, item_id2,knowledge_emb, y = batch_data
+                user_id, item_id, item_id2, knowledge_emb, y = batch_data
                 user_id: torch.Tensor = user_id.to(device)
                 item_id: torch.Tensor = item_id.to(device)
                 item_id2: torch.Tensor = item_id2.to(device)
@@ -382,7 +377,7 @@ class NCDM:
                 optimizer.step()
 
                 epoch_losses.append(loss.mean().item())
-            #print(self.ncdm_s_net.transform_layer_stu.ability_emb.weight)
+            # print(self.ncdm_s_net.transform_layer_stu.ability_emb.weight)
             average_loss = float(np.mean(epoch_losses))
             print("[Epoch %d] average loss: %.6f" % (epoch, average_loss))
 
@@ -391,12 +386,12 @@ class NCDM:
                 print("[Epoch %d] auc: %.6f, accuracy: %.6f" % (epoch, auc, accuracy))
 
                 e = auc - best_auc
-                # 保存最佳模型
+                # Save the best model
                 if e > 0.001:
                     best_auc = auc
                     consecutive_no_improvement = 0
 
-                    # 保存模型
+                    # Save the model
                     torch.save(self.ncdm_s_net.state_dict(), self.model_file)
                     print(f"Saved the best model with AUC: {best_auc} at epoch {epoch}")
 
@@ -408,12 +403,13 @@ class NCDM:
                 # Early stopping check
                 if early_stopping_patience is not None and consecutive_no_improvement >= early_stopping_patience:
                     print(
-                        f"Early stopping at epoch {epoch} as there is no improvement in {early_stopping_patience} consecutive epochs.")
+                        f"Early stopping at epoch {epoch} as there is no improvement in {early_stopping_patience} consecutive epochs."
+                    )
                     break
 
             epoch += 1
 
-        # 将最佳指标输出到文件
+        # Output the best metric to a file
         with open("record.txt", "a") as f:
             f.write(f"Best AUC: {best_auc}, Epoch: {epoch}\n")
 
@@ -423,14 +419,14 @@ class NCDM:
         loss_function = nn.BCELoss()
         optimizer = optim.Adam(ncdm_t_net.parameters(), lr=lr)
 
-        best_auc = 0.0  # 初始化为较低的值
-        best_metrics = None  # 初始化为None
-        early_stop_counter = 0  # 早停计数器
+        best_auc = 0.0  # Initialize to a low value
+        best_metrics = None  # Initialize to None
+        early_stop_counter = 0  # Early stopping counter
 
         for epoch_i in range(epoch):
             epoch_losses = []
             batch_count = 0
-            for batch_data in tqdm(train_data, "Epoch %s" % epoch_i):
+            for batch_data in tqdm(train_data, f"Epoch {epoch_i}"):
                 batch_count += 1
                 user_id, item_id, knowledge_emb, y = batch_data
                 user_id: torch.Tensor = user_id.to(device)
@@ -451,16 +447,16 @@ class NCDM:
 
             if test_data is not None:
                 auc, accuracy, rmse, f1 = self.Target_net_eval(ncdm_t_net, test_data, device=device)
-                print("[Epoch %d] auc: %.6f, accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f" % (epoch_i, auc, accuracy,rmse, f1))
+                print("[Epoch %d] auc: %.6f, accuracy: %.6f, RMSE: %.6f, F1: %.6f" % (epoch_i, auc, accuracy, rmse, f1))
 
                 e = auc - best_auc
                 # Update best metrics if current metrics are better
                 if e > 0.0001:
                     best_auc = auc
                     best_metrics = (auc, accuracy, rmse, f1)
-                    early_stop_counter = 0  # 重置早停计数器
+                    early_stop_counter = 0  # Reset early stopping counter
                     torch.save(ncdm_t_net.state_dict(), self.target_model_file)
-                    print(f"Saved the best target model with AUC: {best_auc} at epoch {epoch}")
+                    print(f"Saved the best target model with AUC: {best_auc} at epoch {epoch_i}")
                 else:
                     if e > 0:
                         best_auc = auc
@@ -477,12 +473,12 @@ class NCDM:
         ncdm_s_net.eval()
         y_true, y_pred = [], []
         for batch_data in tqdm(test_data, "Evaluating"):
-            user_id, item_id, item_id2,knowledge_emb, y = batch_data
+            user_id, item_id, item_id2, knowledge_emb, y = batch_data
             user_id: torch.Tensor = user_id.to(device)
             item_id: torch.Tensor = item_id.to(device)
             item_id2: torch.Tensor = item_id2.to(device)
             knowledge_emb: torch.Tensor = knowledge_emb.to(device)
-            pred: torch.Tensor = ncdm_s_net(user_id, item_id, item_id2,knowledge_emb)
+            pred: torch.Tensor = ncdm_s_net(user_id, item_id, item_id2, knowledge_emb)
             y_pred.extend(pred.detach().cpu().tolist())
             y_true.extend(y.tolist())
 
@@ -501,14 +497,14 @@ class NCDM:
             y_pred.extend(pred.detach().cpu().tolist())
             y_true.extend(y.tolist())
 
-        # 计算RMSE
+        # Calculate RMSE
         rmse = np.sqrt(mean_squared_error(y_true, y_pred))
 
-        # 将概率值转换为二进制标签（0或1）来计算F1分数
+        # Convert probability values to binary labels (0 or 1) to compute F1 score
         y_pred_binary = np.array(y_pred) >= 0.5
         f1 = f1_score(y_true, y_pred_binary)
 
-        # 计算AUC和准确率
+        # Calculate AUC and accuracy
         auc = roc_auc_score(y_true, y_pred)
         accuracy = accuracy_score(y_true, y_pred_binary)
 
@@ -516,7 +512,7 @@ class NCDM:
 
     def Transfer_parameters(self, model, s_ranges):
         self.ncdm_s_net.load_state_dict(torch.load(self.model_file))
-        # 加载模型、迁移参数
+        # Load model and transfer parameters
         model.prompt_k_difficulty.weight.data.copy_(
             self.ncdm_s_net.prompt_k_difficulty.data)
         model.prompt_k_difficulty.requires_grad = True
@@ -530,7 +526,7 @@ class NCDM:
                 self.ncdm_s_net.s_stu_vectors[i].data)
             model.transform_layer_stu.s_stu_vectors[i].requires_grad = True
 
-        # 克隆源模型的参数到目标模型
+        # Clone source model's parameters to target model
         model.fc1.weight.data = self.ncdm_s_net.fc1.weight.clone()
         model.fc1.bias.data = self.ncdm_s_net.fc1.bias.clone()
         model.fc2.weight.data = self.ncdm_s_net.fc2.weight.clone()
@@ -560,14 +556,14 @@ class NCDM:
             y_pred.extend(pred.detach().cpu().tolist())
             y_true.extend(y.tolist())
 
-        # 计算RMSE
+        # Calculate RMSE
         rmse = np.sqrt(mean_squared_error(y_true, y_pred))
 
-        # 将概率值转换为二进制标签（0或1）来计算F1分数
+        # Convert probability values to binary labels (0 or 1) to compute F1 score
         y_pred_binary = np.array(y_pred) >= 0.5
         f1 = f1_score(y_true, y_pred_binary)
 
-        # 计算AUC和准确率
+        # Calculate AUC and accuracy
         auc = roc_auc_score(y_true, y_pred)
         accuracy = accuracy_score(y_true, y_pred_binary)
 
