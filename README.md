@@ -92,6 +92,7 @@ From the analysis, we can see that the PromptCD model (especially the "Ours+" ve
 
 To provide a more comprehensive experiment, we included a comparison with the CCLMF baseline method. The results are as follows:
 
+**Source:** Mathematics,Physics  **Target:** Biology
 | Method | AUC | ACC | RMSE | F1 |
 |---------------|-------|-------|-------|-------|
 | IRT-Origin | 0.667 | 0.652 | 0.466 | 0.738 |
@@ -119,7 +120,7 @@ To provide a more comprehensive experiment, we included a comparison with the CC
 | KSCD-Ours | 0.795 | 0.741 | 0.413 | 0.818 |
 | KSCD-Ours++ | 0.796 | 0.739 | 0.414 | 0.812 |
 
-
+**Source:** B-bin,C-bin,D-bin  **Target:** A-bin
 | Method        | AUC   | ACC   | RMSE  | F1   |
 |---------------|-------|-------|-------|------|
 | IRT-Origin    | 0.670 | 0.800 | 0.393 | 0.884 |
