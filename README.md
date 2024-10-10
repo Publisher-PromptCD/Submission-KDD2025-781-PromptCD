@@ -1,47 +1,47 @@
 # PromptCD: Transferring Prompts for Cross Domain Cognitive Diagnosis 
 
-## 目录
+## Table of Contents
 
-- [描述](#描述)
-- [安装依赖](#安装依赖)
-- [实验设置](#实验设置)
-- [使用示例](#使用示例)
-- [使用示例](#结果展示)
-- [许可证](#许可证)
-- [联系方式](#联系方式)
+- [Description](#description)
+- [Install Dependencies](#install-dependencies)
+- [Experimental Setup](#experimental-setup)
+- [Usage Example](#usage-example)
+- [Result Presentation](#result-presentation)
+- [License](#license)
+- [Contact](#contact)
 
-## 描述 
+## Description 
 
-本项目是论文《Transferring Prompts for Cross Domain Cognitive Diagnosis》的开源代码，包含了我们在论文中使用的数据集、模型文件以及运行脚本。此外，还提供了运行文件的使用示例，帮助用户更好地理解和复现实验结果。
+This project provides the open-source code for the paper "Transferring Prompts for Cross Domain Cognitive Diagnosis," including datasets, model files, and running scripts used in the paper. Additionally, usage examples are provided to help users better understand and reproduce the experimental results.
 
-## 安装依赖
+## Install Dependencies
 
-通过 `requirements.txt` 安装所有必要的依赖包：
+Install all necessary dependencies via `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 实验设置
+## Experimental Setup
 
-### 数据集划分
-- 源域数据集按照 80% 训练集和 20% 测试集的比例划分，使用随机种子 42。
-- 目标域数据集根据学生ID或习题ID，随机抽取 20% 的交互记录作为微调数据集，剩余 80% 的数据作为测试集，使用随机种子 2024。微调数据集进一步按照 9:1 的比例划分为训练集和验证集，使用随机种子 42。
+### Dataset Splitting
+- The source domain dataset is split into 80% training set and 20% test set, using random seed 42.
+- The target domain dataset randomly selects 20% of interaction records based on student IDs or item IDs as the fine-tuning dataset, and the remaining 80% is used as the test set, with random seed 2024. The fine-tuning dataset is further split into 90% training set and 10% validation set, using random seed 42.
 
-### 模型训练
-- 源域训练和目标域微调均采用学习率 lr=0.001，且使用早停机制。
-- 源域训练中，当验证集的 AUC 连续 5 个 epoch 无显著提升（提升不超过 0.001）时，训练停止，耐心值为 5。
-- 目标域微调同样采用耐心值 5，AUC 连续 5 个 epoch 无提升则停止训练。
-- 源域训练和目标域微调的最大训练轮次均为 100 个 epoch。
+### Model Training
+- Both source domain training and target domain fine-tuning use a learning rate of `lr=0.001` and an early stopping mechanism.
+- In source domain training, if the AUC of the validation set does not improve significantly (less than 0.001) for 5 consecutive epochs, training stops, with a patience of 5.
+- The target domain fine-tuning also uses a patience of 5, stopping if the AUC does not improve for 5 consecutive epochs.
+- Both the source domain training and target domain fine-tuning have a maximum of 100 training epochs.
 
-## 使用示例
+## Usage Example
 
-1. 可以使用默认参数直接运行 `main` 文件：
+1. Run the `main` file with default parameters:
 ```bash
 python main_ncdm_cross_subject.py
 ```
 
-2. 也可以通过命令行传递参数运行：
+2. Or pass parameters via the command line:
 ```bash 
 python main_ncdm_cross_subject.py \
   --rate 0.2 \
@@ -50,16 +50,16 @@ python main_ncdm_cross_subject.py \
   --model_file "model.pth" \
   --if_source_train 1 \
   --if_target_migration 2 \
-  --folder "data1/理科_2+1/m_p+b" \
+  --folder "data1/science_2+1/m_p+b" \
   --source "mat,phy" \
   --target "bio"
 ```
 
-## 论文扩充
+## Paper Expansion
 
-### 新增动机图
+### Added Motivation Diagram
 
-为了强化我们的研究动机，我们加入了关于深度学习认知诊断性能的讨论，强调这些模型在CDCD情境下也遇到的困难。下面以KSCD模型为例：
+To strengthen our research motivation, we included discussions on the performance of deep learning-based cognitive diagnosis models, emphasizing the difficulties encountered in cross-domain cognitive diagnosis (CDCD) scenarios. Below is an example using the KSCD model:
 
 ![KSCD Motivation diagram](images/Motivation_diagram.png)
 
@@ -70,22 +70,22 @@ python main_ncdm_cross_subject.py \
 | Scenario C | 20% Mathematics + Physics    | 40% Mathematics |
 | Scenario D | 20% Mathematics + Chinese    | 40% Mathematics |
 
-我们在 SLP 数据集上对 KSCD 模型进行了域内（A 和 B）和跨域（C 和 D）场景的实验，场景描述详见上表。结果总结如下：1）C 和 D 的表现不如 A 和 B，表明传统模型在 CDCD 场景中表现不佳；2）A 的表现不如 B，显示过拟合于有限数据是一个显著问题；3）D 的表现显著不如 C，这是由于中文与数学的分布差异大于物理与数学，突显了模型在 CDCD 场景中对源领域的敏感性。
+We conducted experiments on the KSCD model using the SLP dataset for both intra-domain (A and B) and cross-domain (C and D) scenarios. The results are summarized as follows: 1) The performance in C and D is worse than in A and B, indicating that traditional models do not perform well in CDCD scenarios; 2) The performance in A is worse than in B, showing that overfitting to limited data is a significant issue; 3) The performance in D is significantly worse than in C, due to the larger distribution differences between Chinese and Mathematics compared to Physics and Mathematics, highlighting the model's sensitivity to the source domain in CDCD scenarios.
 
-### 新增显著性分析
+### Added Significance Tests
 
-我们对不同场景下使用的多种基线模型所产生的 AUC、ACC、RMSE 和 F1 等指标进行了 Nemenyi 测试以报告统计显著性，具体结果如下：
+We conducted Nemenyi tests on various baseline models used in different scenarios to report statistical significance for metrics such as AUC, ACC, RMSE, and F1. The specific results are as follows:
 
 ![AUC Significance Test](images/auc_no_cc.jpg)
 ![ACC  Significance Test](images/acc_no_cc.jpg)
 ![RMSE  Significance Test](images/rmse_no_cc.jpg)
 ![F1  Significance Test](images/f1_no_cc.jpg)
 
-从分析结果可以看出，PromptCD 模型（特别是 "Ours+" 版本）在多个领域中显著优于其他对比模型。这进一步验证了跨域提示迁移方法在认知诊断任务中的有效性和鲁棒性。
+From the analysis, we can see that the PromptCD model (especially the "Ours+" version) significantly outperforms other baseline models in multiple domains. This further validates the effectiveness and robustness of cross-domain prompt transfer methods in cognitive diagnosis tasks.
 
-### 新增对比模型
+### Added Baseline Models Comparison
 
-为了进行更全面的实验，我们添加了与 CCLMF 基线方法的对比，结果如下：
+To provide a more comprehensive experiment, we included a comparison with the CCLMF baseline method. The results are as follows:
 
 | Method | AUC | ACC | RMSE | F1 |
 |---------------|-------|-------|-------|-------|
@@ -114,17 +114,18 @@ python main_ncdm_cross_subject.py \
 | KSCD-Ours | 0.795 | 0.741 | 0.413 | 0.818 |
 | KSCD-Ours++ | 0.796 | 0.739 | 0.414 | 0.812 |
 
-并进行了 Nemenyi 测试以报告统计显著性。结果如下：
+We also conducted Nemenyi tests to report statistical significance. The results are as follows:
 
 ![AUC Significance Test with CCLMF](images/auc.jpg)
 ![ACC Significance Test with CCLMF](images/acc.jpg)
-![ RMSE Significance Test with CCLMF](images/rmse.jpg)
+![RMSE Significance Test with CCLMF](images/rmse.jpg)
 ![F1 Significance Test with CCLMF](images/f1.jpg)
 
-与之前的分析一致，结果显示 PromptCD 模型仍然具有明显的性能优势。
+The results, consistent with the previous analysis, show that the PromptCD model still has a significant performance advantage.
 
-### 新增跨域场景
-我们添加了两项新实验：从人文学科到科学，以及从科学到人文学科。我们的结果表明，在这两种情况下，PromptCD 的表现都优于对比算法。
+### Added Cross-Domain Scenarios
+
+We added two new experiments: from humanities to sciences, and from sciences to humanities. Our results show that in both cases, PromptCD outperforms the comparison algorithms.
 
 **Source:** Biology, Mathematics  **Target:** Geography
 | Method | AUC | ACC | RMSE | F1 |
@@ -182,16 +183,16 @@ python main_ncdm_cross_subject.py \
 | KSCD-Ours | 0.848 | 0.769 | 0.395 | 0.804 |
 | KSCD-Ours++ | 0.849 | 0.772 | 0.393 | 0.815 |
 
-### 新增模型嵌入可视化
+### Added Model Embedding Visualizations
 
-在嵌入可视化部分，我们补充了关于练习相关的可视化，对于练习方面的CDCD场景，下面的左图展示了引入Prompt前原始练习表示的分布，并揭示了来自不同学科的练习的原始表示没有显示出任何明显的模式。而下面的右图展示了引入Prompt后得到的最终表示分布。在练习方面的CDCD场景中，迁移提示也有效捕捉到了各个科目内部的特征以及不同科目之间的差异。
+For the exercise aspect in the CDCD scenario, the following figure shows the distribution of original exercise representations before introducing Prompt on the left, and the final representations after introducing Prompt on the right:
 
 #### Exercise-aspect
 
 ![Before using Prompt](images/Figure_1.png) 
 ![After using Prompt](images/Figure_2.png)
 
-此外，我们引入了两个量化指标——类间距离和类内距离，以展示在引入 PromptCD 之前和之后，学生和练习嵌入向量的变化。这些指标将更清晰地展示我们方法的有效性，并确保我们在两个方面的展示保持一致。
+In addition, we introduced two quantitative metrics—inter-cluster distance and intra-cluster distance—to demonstrate the changes in student and exercise embedding vectors before and after introducing PromptCD. These metrics provide a clearer illustration of the effectiveness of our method and ensure consistency in our presentation on both aspects.
 
 | Status | Dimension | Intra-cluster Distance | Inter-cluster Distance |
 |------------------|--------------|------------------------|------------------------|
@@ -200,12 +201,13 @@ python main_ncdm_cross_subject.py \
 | After Prompt | Exercise Embedding | 2.8690 | 12.2945 |
 | After Prompt | Student Embedding | 2.9120 | 13.0087 |
 
-## 许可证
+## License
 
-该项目遵循 MIT 许可证。
+This project is licensed under the MIT License.
 
-## 联系方式
+## Contact
 
-如有任何问题或建议，欢迎联系项目维护者：
+For any questions or suggestions, feel free to contact the project maintainers:
 
-- 电子邮件: 
+- Email: 
+```
