@@ -119,6 +119,35 @@ To provide a more comprehensive experiment, we included a comparison with the CC
 | KSCD-Ours | 0.795 | 0.741 | 0.413 | 0.818 |
 | KSCD-Ours++ | 0.796 | 0.739 | 0.414 | 0.812 |
 
+
+| Method        | AUC   | ACC   | RMSE  | F1   |
+|---------------|-------|-------|-------|------|
+| IRT-Origin    | 0.670 | 0.800 | 0.393 | 0.884 |
+| IRT-Tech      | 0.821 | 0.847 | 0.336 | 0.912 |
+| IRT-Zero      | 0.855 | 0.854 | 0.324 | 0.917 |
+| IRT-CC        | 0.887 | 0.833 | 0.325 | 0.909 |
+| IRT-Ours      | 0.871 | 0.867 | 0.316 | 0.922 |
+| IRT-Ours++    | 0.881 | 0.872 | 0.308 | 0.925 |
+| MIRT-Origin   | 0.718 | 0.820 | 0.372 | 0.896 |
+| MIRT-Tech     | 0.820 | 0.845 | 0.339 | 0.912 |
+| MIRT-Zero     | 0.841 | 0.841 | 0.347 | 0.902 |
+| MIRT-CC       | 0.834 | 0.849 | 0.331 | 0.911 |
+| MIRT-Ours     | 0.861 | 0.859 | 0.324 | 0.917 |
+| MIRT-Ours++   | 0.886 | 0.872 | 0.311 | 0.923 |
+| NCDM-Origin   | 0.687 | 0.809 | 0.387 | 0.894 |
+| NCDM-Tech     | 0.818 | 0.845 | 0.340 | 0.910 |
+| NCDM-Zero     | 0.761 | 0.800 | 0.376 | 0.877 |
+| NCDM-CC       | 0.844 | 0.851 | 0.332 | 0.911 |
+| NCDM-Ours     | 0.879 | 0.866 | 0.316 | 0.918 |
+| NCDM-Ours++   | 0.878 | 0.865 | 0.319 | 0.920 |
+| KSCD-Origin   | 0.764 | 0.831 | 0.368 | 0.901 |
+| KSCD-Tech     | 0.809 | 0.848 | 0.338 | 0.913 |
+| KSCD-Zero     | 0.778 | 0.806 | 0.346 | 0.877 |
+| KSCD-CC       | 0.854 | 0.855 | 0.327 | 0.915 |
+| KSCD-Ours     | 0.875 | 0.865 | 0.312 | 0.921 |
+| KSCD-Ours++   | 0.880 | 0.868 | 0.310 | 0.923 |
+
+
 We also conducted Nemenyi tests to report statistical significance. The results are as follows:
 
 <p align="center">
