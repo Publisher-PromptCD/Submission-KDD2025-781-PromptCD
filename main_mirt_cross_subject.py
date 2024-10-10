@@ -19,7 +19,7 @@ parser.add_argument('--model_file', type=str, default="source_model/cross_subjec
 parser.add_argument('--target_model_file', type=str, default="target_model/cross_subject/mirt/temp.pth", help='')
 parser.add_argument('--if_source_train', type=int, default=0, help='Description of if_source_train parameter')
 parser.add_argument('--if_target_migration', type=int, default=2, help='0--Origin, 1--ours, 2--ParTrans')
-parser.add_argument('--folder', type=str, default='data1/交叉2+1/c_h+p', help='Description of folder parameter')
+parser.add_argument('--folder', type=str, default='data1/ intersection_2+1/c_h+p', help='Description of folder parameter')
 parser.add_argument('--source', type=str, default='chi,his', help='Description of source parameter')
 parser.add_argument('--target', type=str, default='phy', help='Description of target parameter')
 

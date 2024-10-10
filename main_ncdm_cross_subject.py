@@ -18,10 +18,7 @@ parser.add_argument('--model_file', type=str, default="source_model/cross_subjec
 parser.add_argument('--target_model_file', type=str, default="target_model/cross_subject/ncdm/temp.pth", help='')
 parser.add_argument('--if_source_train', type=int, default=0, help='Description of if_source_train parameter')
 parser.add_argument('--if_target_migration', type=int, default=2, help='0 - Origin, 1 - Ours, 2 - ParTran')
-# parser.add_argument('--folder', type=str, default='C:/Users/86139/PycharmProjects/temp/final_data/N+G+A_S', help='Description of folder parameter')
-# parser.add_argument('--source', type=str, default='Number,Geometry and Measure,Algebra', help='Description of source parameter')
-# parser.add_argument('--target', type=str, default='Data and Statistics', help='Description of target parameter')
-parser.add_argument('--folder', type=str, default='data1/交叉2+1/c_h+p', help='Description of folder parameter')
+parser.add_argument('--folder', type=str, default='data1/ intersection_2+1/c_h+p', help='Description of folder parameter')
 parser.add_argument('--source', type=str, default='chi,his', help='Description of source parameter')
 parser.add_argument('--target', type=str, default='phy', help='Description of target parameter')
 args = parser.parse_args()
@@ -164,7 +161,7 @@ t_train_set, t_val_set, t_test_set = [
 logging.getLogger().setLevel(logging.INFO)
 
 # Create NCDM object
-cdm = NCDM(knowledge_n, item_n, s_user_n, t_user_n, pp_dim,
+cdm = NCDM(s_knowledge_n, t_knowledge_n, s_item_n, t_item_n, s_user_n, pp_dim,
            source_range, model_file, target_model_file)
 
 if if_source_train == 1:
