@@ -76,10 +76,15 @@ We conducted experiments on the KSCD model using the SLP dataset for both intra-
 
 We conducted Nemenyi tests on various baseline models used in different scenarios to report statistical significance for metrics such as AUC, ACC, RMSE, and F1. The specific results are as follows:
 
-![AUC Significance Test](images/auc_no_cc.jpg)
-![ACC  Significance Test](images/acc_no_cc.jpg)
-![RMSE  Significance Test](images/rmse_no_cc.jpg)
-![F1  Significance Test](images/f1_no_cc.jpg)
+<p align="center">
+  <img src="images/auc_no_cc.jpg" alt="AUC Significance Test" width="45%" />
+  <img src="images/acc_no_cc.jpg" alt="ACC Significance Test" width="45%" />
+</p>
+
+<p align="center">
+  <img src="images/rmse_no_cc.jpg" alt="RMSE Significance Test" width="45%" />
+  <img src="images/f1_no_cc.jpg" alt="F1 Significance Test" width="45%" />
+</p>
 
 From the analysis, we can see that the PromptCD model (especially the "Ours+" version) significantly outperforms other baseline models in multiple domains. This further validates the effectiveness and robustness of cross-domain prompt transfer methods in cognitive diagnosis tasks.
 
@@ -116,10 +121,15 @@ To provide a more comprehensive experiment, we included a comparison with the CC
 
 We also conducted Nemenyi tests to report statistical significance. The results are as follows:
 
-![AUC Significance Test with CCLMF](images/auc.jpg)
-![ACC Significance Test with CCLMF](images/acc.jpg)
-![RMSE Significance Test with CCLMF](images/rmse.jpg)
-![F1 Significance Test with CCLMF](images/f1.jpg)
+<p align="center">
+  <img src="images/auc.jpg" alt="AUC Significance Test with CCLMF" width="45%" />
+  <img src="images/acc.jpg" alt="ACC Significance Test with CCLMF" width="45%" />
+</p>
+
+<p align="center">
+  <img src="images/rmse.jpg" alt="RMSE Significance Test with CCLMF" width="45%" />
+  <img src="images/f1.jpg" alt="F1 Significance Test with CCLMF" width="45%" />
+</p>
 
 The results, consistent with the previous analysis, show that the PromptCD model still has a significant performance advantage.
 
