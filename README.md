@@ -61,7 +61,7 @@ python main_ncdm_cross_subject.py \
 
 To strengthen our research motivation, we included discussions on the performance of deep learning-based cognitive diagnosis models, emphasizing the difficulties encountered in cross-domain cognitive diagnosis (CDCD) scenarios. Below is an example using the KSCD model:
 
-![KSCD Motivation diagram](images/Motivation_diagram.png)
+<img src="images/Motivation_diagram.png" alt="KSCD Motivation diagram" width="50%">
 
 | Scenarios  | Source                      | Target          |
 |------------|-----------------------------|-----------------|
