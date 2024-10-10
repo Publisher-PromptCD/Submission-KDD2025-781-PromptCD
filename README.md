@@ -1,5 +1,7 @@
 # PromptCD: Transferring Prompts for Cross Domain Cognitive Diagnosis 
 
+This is the official PyTorch implementation of the paper "Transferring Prompts for Cross Domain Cognitive Diagnosis." In the paper, we address the issue of declining accuracy in cross-domain cognitive diagnosis (CDCD) by proposing a simple and generalizable cross-domain framework, PromptCD, aimed at achieving cross-domain cognitive diagnosis through soft prompt transfer. Our approach first learns general representations of entities in the source domain using soft prompts and then transfers these representations to the target domain model based on the characteristics of different entities, effectively utilizing the source domain data to capture underlying information. The process consists of two stages: pre-training and fine-tuning. In the pre-training stage, the prompts are updated using source domain data, and in the fine-tuning stage, the model parameters are adjusted with a small amount of target domain data to achieve knowledge transfer and adaptation.
+
 ## Table of Contents
 
 - [Description](#description)
