@@ -45,7 +45,6 @@ class Transform_Stu(nn.Module):
         self.ability_emb = nn.Embedding(stu_num, pp_dim)
 
     def forward(self, x, stu_id):
-        # Add the ability vector to the input data
         ability_x = self.ability_emb(stu_id)
         output = torch.cat([ability_x, x], dim=1)
         return output
@@ -54,19 +53,13 @@ class Transform_Stu(nn.Module):
 class Transform_Exr(nn.Module):
     def __init__(self, pp_dim, s_ranges):
         super(Transform_Exr, self).__init__()
-        # Create a parameter list to store s_exer_vectors
         self.s_exer_vectors = nn.ParameterList([nn.Parameter(torch.rand(pp_dim)) for _ in range(len(s_ranges))])
-        # Horizontally concatenate through MLP
         self.mlp = SimpleMLP(pp_dim * len(s_ranges), 10, pp_dim)
 
     def forward(self, x):
-        # Concatenate all s_exer_vectors together
         exer_vectors = torch.cat([vector.unsqueeze(0) for vector in self.s_exer_vectors], dim=1)
-        # Process the concatenated vectors through MLP
         new_exer_vector = self.mlp(exer_vectors)
-        # Expand the processed vectors to match the input data size
         new_exer_vector = new_exer_vector.expand(x.size(0), -1)
-        # Concatenate the processed vectors with the input data and return
         output = torch.cat([new_exer_vector, x], dim=1)
         return output
 
@@ -75,16 +68,13 @@ class ConvolutionalTransform(nn.Module):
     def __init__(self, fc_out_features, input_channels=2, output_channels=1, kernel_size=1, stride=1, padding=0):
         super(ConvolutionalTransform, self).__init__()
         self.conv1 = nn.Conv1d(input_channels, output_channels, kernel_size, stride, padding)
-        self.MLP = SimpleMLP(fc_out_features, 10, fc_out_features)
-        # self.fc = nn.Linear(fc_out_features, fc_out_features)
+        self.MLP = SimpleMLP(fc_out_features,10,fc_out_features)
 
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
-        # Flatten the output to a one-dimensional tensor for input into the fully connected layer
-        x = x.view(x.size(0), -1)  # -1 indicates automatic size inference
+        x = x.view(x.size(0), -1)
         x = self.MLP(x)
-        # x = self.fc(x)
         return x
 
 class Source_Net(nn.Module):
@@ -95,11 +85,11 @@ class Source_Net(nn.Module):
         self.emb_num = student_n
         self.stu_dim = self.knowledge_dim
         self.prednet_input_len = self.knowledge_dim + self.pp_dim
-        self.prednet_len1, self.prednet_len2 = 512, 256  # Changeable
+        self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
         super(Source_Net, self).__init__()
 
-        # Prediction sub-net
+        # prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.stu_dim)
         self.k_difficulty = nn.Parameter(torch.rand((self.exer_n, self.knowledge_dim)))
         nn.init.xavier_uniform_(self.k_difficulty)
@@ -120,20 +110,18 @@ class Source_Net(nn.Module):
         self.fc1 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
         self.fc2 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
 
-        # Initialize
+        # initialize
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # Before prediction network
+        # before prednet
         stu_emb = self.student_emb(stu_id)
         com_sta_emb = self.transform_layer_stu(stu_emb, stu_id)
         com_sta_emb = torch.sigmoid(self.fc1(com_sta_emb))
 
         temp_vectors = torch.cat([vector.repeat(r[1] - r[0] + 1, 1) for vector, r in zip(self.s_exer_vectors, self.s_ranges)], dim=0)
-        # temp_vectors = torch.cat(
-        #     [vector.repeat(r[1], 1) for vector, r in zip(self.s_exer_vectors, self.s_ranges)], dim=0)
         new_k_difficulty_emb = torch.cat([temp_vectors, self.k_difficulty], dim=1)
 
         k_difficulty = torch.index_select(new_k_difficulty_emb, dim=0, index=input_exercise)
@@ -141,7 +129,7 @@ class Source_Net(nn.Module):
 
         e_difficulty = torch.sigmoid(self.e_difficulty(input_exercise))  # * 10
         #----------------------------------------------------------------
-        # Prediction network
+        # prednet
         input_x = e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -151,9 +139,7 @@ class Source_Net(nn.Module):
 
 
 class Target_Net(nn.Module):
-# train_knowledge_n is the maximum number of knowledge points during training, knowledge_n is the maximum number of knowledge points in the current subject
-# exer_n is the number of exercises in the target domain, student is the same as before
-    def __init__(self, train_knowledge_n, knowledge_n, exer_n, student_n, s_ranges, pp_dim):
+    def __init__(self,train_knowledge_n, knowledge_n, exer_n, student_n,s_ranges,pp_dim):
         self.pp_dim = pp_dim
         self.train_knowledge_dim = train_knowledge_n
         self.knowledge_dim = knowledge_n
@@ -161,18 +147,17 @@ class Target_Net(nn.Module):
         self.emb_num = student_n
         self.stu_dim = self.knowledge_dim
         self.prednet_input_len = self.knowledge_dim + self.pp_dim
-        self.prednet_len1, self.prednet_len2 = 512, 256  # Changeable
+        self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
 
         super(Target_Net, self).__init__()
-        # Prediction sub-net
+        # prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.knowledge_dim)
         self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
         self.e_difficulty = nn.Embedding(self.exer_n, 1)
         # --------------------------------------------------
-        # self.transform_layer_stu = Transform_Stu(self.emb_num, self.pp_dim)
         self.ability_emb = nn.Embedding(self.emb_num, pp_dim)
-        self.transform_layer_exr = Transform_Exr(self.pp_dim, self.s_ranges)
+        self.transform_layer_exr = Transform_Exr(self.pp_dim,self.s_ranges)
         # --------------------------------------------------
         self.prednet_full1 = PosLinear(self.knowledge_dim, self.prednet_len1)
         self.drop_1 = nn.Dropout(p=0.5)
@@ -183,13 +168,13 @@ class Target_Net(nn.Module):
         self.fc1 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
         self.fc2 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
 
-        # Initialize
+        # initialize
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # Before prediction network
+        # before prednet
         stu_emb = self.student_emb(stu_id)
         ability_x = self.ability_emb(stu_id)
         com_sta_emb = torch.cat([ability_x, stu_emb], dim=1)
@@ -201,7 +186,7 @@ class Target_Net(nn.Module):
 
         e_difficulty = torch.sigmoid(self.e_difficulty(input_exercise))  # * 10
         # ----------------------------------------------------------------
-        # Prediction network
+        # prednet
         input_x = e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -210,9 +195,8 @@ class Target_Net(nn.Module):
         return output_1.view(-1)
 
 class Target_Net2(nn.Module):
-# train_knowledge_n is the maximum number of knowledge points during training, knowledge_n is the maximum number of knowledge points in the current subject
-# exer_n is the number of exercises in the target domain, student is the same as before
-    def __init__(self, train_knowledge_n, knowledge_n, exer_n, student_n, s_ranges, pp_dim):
+
+    def __init__(self,train_knowledge_n, knowledge_n, exer_n, student_n,s_ranges,pp_dim):
         self.pp_dim = pp_dim
         self.train_knowledge_dim = train_knowledge_n
         self.knowledge_dim = knowledge_n
@@ -220,20 +204,20 @@ class Target_Net2(nn.Module):
         self.emb_num = student_n
         self.stu_dim = self.knowledge_dim
         self.prednet_input_len = self.knowledge_dim + self.pp_dim
-        self.prednet_len1, self.prednet_len2 = 512, 256  # Changeable
+        self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
         self.s_ranges = s_ranges
 
         super(Target_Net2, self).__init__()
-        # Prediction sub-net
-        # self.student_emb = nn.Embedding(self.emb_num, self.knowledge_dim)
+        # prediction sub-net
+        #self.student_emb = nn.Embedding(self.emb_num, self.knowledge_dim)
         self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
         self.e_difficulty = nn.Embedding(self.exer_n, 1)
         # --------------------------------------------------
-        # self.transform_layer_stu = Transform_Stu(self.emb_num, self.pp_dim)
+        #self.transform_layer_stu = Transform_Stu(self.emb_num, self.pp_dim)
         self.ability_emb = nn.Embedding(self.emb_num, pp_dim)
         self.generalize_layer_stu = nn.Linear(self.pp_dim, self.knowledge_dim)
 
-        self.transform_layer_exr = Transform_Exr(self.pp_dim, self.s_ranges)
+        self.transform_layer_exr = Transform_Exr(self.pp_dim,self.s_ranges)
         # --------------------------------------------------
         self.prednet_full1 = PosLinear(self.knowledge_dim, self.prednet_len1)
         self.drop_1 = nn.Dropout(p=0.5)
@@ -244,14 +228,14 @@ class Target_Net2(nn.Module):
         self.fc1 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
         self.fc2 = nn.Linear(self.pp_dim + self.knowledge_dim, self.knowledge_dim)
 
-        # Initialize
+        # initialize
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # Before prediction network
-        # stu_emb = self.student_emb(stu_id)
+        # before prednet
+        #stu_emb = self.student_emb(stu_id)
         ability_x = self.ability_emb(stu_id)
         stu_emb = self.generalize_layer_stu(ability_x)
         com_sta_emb = torch.cat([ability_x, stu_emb], dim=1)
@@ -263,7 +247,7 @@ class Target_Net2(nn.Module):
 
         e_difficulty = torch.sigmoid(self.e_difficulty(input_exercise))  # * 10
         # ----------------------------------------------------------------
-        # Prediction network
+        # prednet
         input_x = e_difficulty * (com_sta_emb - com_k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -279,11 +263,11 @@ class Net(nn.Module):
         self.emb_num = student_n
         self.stu_dim = self.knowledge_dim
         self.prednet_input_len = self.knowledge_dim
-        self.prednet_len1, self.prednet_len2 = 512, 256  # Changeable
+        self.prednet_len1, self.prednet_len2 = 512, 256  # changeable
 
         super(Net, self).__init__()
 
-        # Prediction sub-net
+        # prediction sub-net
         self.student_emb = nn.Embedding(self.emb_num, self.stu_dim)
         self.k_difficulty = nn.Embedding(self.exer_n, self.knowledge_dim)
         self.e_difficulty = nn.Embedding(self.exer_n, 1)
@@ -293,18 +277,18 @@ class Net(nn.Module):
         self.drop_2 = nn.Dropout(p=0.5)
         self.prednet_full3 = PosLinear(self.prednet_len2, 1)
 
-        # Initialize
+        # initialize
         for name, param in self.named_parameters():
             if 'weight' in name:
                 nn.init.xavier_normal_(param)
 
     def forward(self, stu_id, input_exercise, input_knowledge_point):
-        # Before prediction network
+        # before prednet
         stu_emb = self.student_emb(stu_id)
         stat_emb = torch.sigmoid(stu_emb)
         k_difficulty = torch.sigmoid(self.k_difficulty(input_exercise))
         e_difficulty = torch.sigmoid(self.e_difficulty(input_exercise))  # * 10
-        # Prediction network
+        # prednet
         input_x = e_difficulty * (stat_emb - k_difficulty) * input_knowledge_point
         input_x = self.drop_1(torch.sigmoid(self.prednet_full1(input_x)))
         input_x = self.drop_2(torch.sigmoid(self.prednet_full2(input_x)))
@@ -316,13 +300,13 @@ class Net(nn.Module):
 class NCDM:
     '''Neural Cognitive Diagnosis Model'''
 
-    def __init__(self, source_knowledge_n, target_knowledge_n, source_exer_n, target_exer_n, student_n, pp_dim, s_ranges, model_file, target_model_file):
+    def __init__(self, source_knowledge_n, target_knowledge_n, source_exer_n, target_exer_n, student_n,pp_dim,s_ranges,model_file, target_model_file):
         super(NCDM, self).__init__()
         self.pp_dim = pp_dim
         self.latent_dim = target_knowledge_n
         self.model_file = model_file
         self.target_model_file = target_model_file
-        self.ncdm_s_net = Source_Net(source_knowledge_n, source_exer_n, student_n, pp_dim, s_ranges)
+        self.ncdm_s_net = Source_Net(source_knowledge_n, source_exer_n, student_n, pp_dim,s_ranges)
         self.ncdm_t_net = Target_Net(source_knowledge_n, target_knowledge_n, target_exer_n, student_n, s_ranges, pp_dim)
         self.ncdm_t_net2 = Target_Net2(source_knowledge_n, target_knowledge_n, target_exer_n, student_n, s_ranges, pp_dim)
 
@@ -357,7 +341,7 @@ class NCDM:
                 optimizer.step()
 
                 epoch_losses.append(loss.mean().item())
-            # print(self.ncdm_s_net.transform_layer_stu.ability_emb.weight)
+            #print(self.ncdm_s_net.transform_layer_stu.ability_emb.weight)
             average_loss = float(np.mean(epoch_losses))
             print("[Epoch %d] average loss: %.6f" % (epoch, average_loss))
 
@@ -366,12 +350,10 @@ class NCDM:
                 print("[Epoch %d] auc: %.6f, accuracy: %.6f" % (epoch, auc, accuracy))
 
                 e = auc - best_auc
-                # Save the best model
                 if e > 0.001:
                     best_auc = auc
                     consecutive_no_improvement = 0
 
-                    # Save the model
                     torch.save(self.ncdm_s_net.state_dict(), self.model_file)
                     print(f"Saved the best model with AUC: {best_auc} at epoch {epoch}")
 
@@ -388,31 +370,30 @@ class NCDM:
 
             epoch += 1
 
-        # Output the best metric to a file
         with open("record.txt", "a") as f:
             f.write(f"Best AUC: {best_auc}, Epoch: {epoch}\n")
 
     def Target_train(self, model, train_data, test_data=None, epoch=50, device="cpu", lr=0.002, silence=False, patience=2):
-        # Transfer trained parameters
-        t_irt_net = model.to(device)
-        t_irt_net.train()
+        ncdm_t_net = model.to(device)
+        ncdm_t_net.train()
         loss_function = nn.BCELoss()
-        optimizer = optim.Adam(t_irt_net.parameters(), lr=lr)
+        optimizer = optim.Adam(ncdm_t_net.parameters(), lr=lr)
 
-        best_auc = 0.0  # Initialize to a low value
-        best_metrics = None  # Initialize to None
-        early_stop_counter = 0  # Early stopping counter
+        best_auc = 0.0
+        best_metrics = None
+        early_stop_counter = 0
 
         for epoch_i in range(epoch):
             epoch_losses = []
             batch_count = 0
             for batch_data in tqdm(train_data, "Epoch %s" % epoch_i):
                 batch_count += 1
-                user_id, item_id, y = batch_data
+                user_id, item_id, knowledge_emb, y = batch_data
                 user_id: torch.Tensor = user_id.to(device)
                 item_id: torch.Tensor = item_id.to(device)
+                knowledge_emb: torch.Tensor = knowledge_emb.to(device)
                 y: torch.Tensor = y.to(device)
-                pred: torch.Tensor = t_irt_net(user_id, item_id)
+                pred: torch.Tensor = ncdm_t_net(user_id, item_id, knowledge_emb)
                 loss = loss_function(pred, y)
 
                 optimizer.zero_grad()
@@ -426,15 +407,15 @@ class NCDM:
 
             if test_data is not None:
                 auc, accuracy, rmse, f1 = self.Target_net_eval(model, test_data, device=device)
-                print("[Epoch %d] auc: %.6f, accuracy: %.6f, RMSE: %.6f, F1: %.6f" % (epoch_i, auc, accuracy, rmse, f1))
+                print("[Epoch %d] auc: %.6f, accuracy: %.6f" % (epoch_i, auc, accuracy))
 
                 e = auc - best_auc
                 # Update best metrics if current metrics are better
                 if e > 0.0001:
                     best_auc = auc
                     best_metrics = (auc, accuracy, rmse, f1)
-                    early_stop_counter = 0  # Reset early stopping counter
-                    torch.save(t_irt_net.state_dict(), self.target_model_file)
+                    early_stop_counter = 0  # 重置早停计数器
+                    torch.save(ncdm_t_net.state_dict(), self.target_model_file)
                     print(f"Saved the best target model with AUC: {best_auc} at epoch {epoch}")
                 else:
                     if e > 0:
@@ -446,15 +427,14 @@ class NCDM:
                 if early_stop_counter >= patience:
                     print(f"Early stopping at epoch {epoch_i}. No improvement for {patience} epochs.")
                     break
-        #[92, 17, 49, 103, 56, 24, 31, 108, 89, 12]
 
     def Target_train_0(self, test_data=None, epoch=10, device="cpu", lr=0.002, silence=False, patience=3):
         self.ncdm_t_net = self.ncdm_t_net.to(device)
         self.ncdm_t_net.train()
 
-        best_auc = 0.0  # Initialize to a low value
-        best_metrics = None  # Initialize to None
-        early_stop_counter = 0  # Early stopping counter
+        best_auc = 0.0
+        best_metrics = None
+        early_stop_counter = 0
 
         for epoch_i in range(epoch):
             if test_data is not None:
@@ -465,7 +445,7 @@ class NCDM:
                 if auc > best_auc:
                     best_auc = auc
                     best_metrics = (auc, accuracy, rmse, f1)
-                    early_stop_counter = 0  # Reset early stopping counter
+                    early_stop_counter = 0  # 重置早停计数器
                 else:
                     early_stop_counter += 1
 
@@ -474,7 +454,6 @@ class NCDM:
                     print(f"Early stopping at epoch {epoch_i}. No improvement for {patience} epochs.")
                     break
 
-        # Print all best metrics
         if best_metrics is not None:
             best_auc, best_accuracy, best_rmse, best_f1 = best_metrics
             print("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f" % (
@@ -508,14 +487,11 @@ class NCDM:
             y_pred.extend(pred.detach().cpu().tolist())
             y_true.extend(y.tolist())
 
-        # Calculate RMSE
         rmse = np.sqrt(mean_squared_error(y_true, y_pred))
 
-        # Convert probability values to binary labels (0 or 1) to compute F1 score
         y_pred_binary = np.array(y_pred) >= 0.5
         f1 = f1_score(y_true, y_pred_binary)
 
-        # Calculate AUC and accuracy
         auc = roc_auc_score(y_true, y_pred)
         accuracy = accuracy_score(y_true, y_pred_binary)
 
@@ -524,7 +500,6 @@ class NCDM:
 
     def Transfer_parameters(self, model, s_ranges):
         self.ncdm_s_net.load_state_dict(torch.load(self.model_file))
-        # Load model and transfer parameters
         model.ability_emb.weight.data.copy_(
             self.ncdm_s_net.transform_layer_stu.ability_emb.weight.data)
 
@@ -553,14 +528,11 @@ class NCDM:
             y_pred.extend(pred.detach().cpu().tolist())
             y_true.extend(y.tolist())
 
-        # Calculate RMSE
         rmse = np.sqrt(mean_squared_error(y_true, y_pred))
 
-        # Convert probability values to binary labels (0 or 1) to compute F1 score
         y_pred_binary = np.array(y_pred) >= 0.5
         f1 = f1_score(y_true, y_pred_binary)
 
-        # Calculate AUC and accuracy
         auc = roc_auc_score(y_true, y_pred)
         accuracy = accuracy_score(y_true, y_pred_binary)
 
