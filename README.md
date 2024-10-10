@@ -199,8 +199,8 @@ For the exercise aspect in the CDCD scenario, the following figure shows the dis
 
 #### Exercise-aspect
 
-![Before using Prompt](images/Figure_1.png) 
-![After using Prompt](images/Figure_2.png)
+<img src="images/Figure_1.png" alt="Before using Prompt" width="50%">
+<img src="images/Figure_2.png" alt="After using Prompt" width="50%">
 
 In addition, we introduced two quantitative metrics—inter-cluster distance and intra-cluster distance—to demonstrate the changes in student and exercise embedding vectors before and after introducing PromptCD. These metrics provide a clearer illustration of the effectiveness of our method and ensure consistency in our presentation on both aspects.
 
