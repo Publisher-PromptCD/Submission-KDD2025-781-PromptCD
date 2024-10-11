@@ -41,23 +41,21 @@ pip install -r requirements.txt
 
 ## Usage Example
 
-1. Run the `main` file with default parameters:
+
+**1. Running a Specific Model**
+
+If you want to run a specific model, execute the `main` file located in the `scripts` folder with the default parameters. For example:
+
 ```bash
 python main_ncdm_cross_subject.py
 ```
 
-2. Or pass parameters via the command line:
-```bash 
-python main_ncdm_cross_subject.py \
-  --rate 0.2 \
-  --pp_dim 20 \
-  --batch_size 256 \
-  --model_file "model.pth" \
-  --if_source_train 1 \
-  --if_target_migration 2 \
-  --folder "data1/science_2+1/m_p+b" \
-  --source "mat,phy" \
-  --target "bio"
+**2. Running Multiple Models Simultaneously**
+
+If you wish to run multiple models at once, modify the parameters in the `run_subject.sh` file. Select the desired scenarios and models to run, then execute the `run_subject.sh` script:
+
+```bash
+./run_subject.sh
 ```
 
 ## Paper Expansion
