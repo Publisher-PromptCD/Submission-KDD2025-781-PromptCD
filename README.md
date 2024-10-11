@@ -251,7 +251,7 @@ For the exercise aspect in the CDCD scenario, the following figure shows the dis
 #### Exercise-aspect
 
 <p align="center">
-  <img src="images/Figure_1_and_2.png" alt="Before and After using Prompt" width="100%" />
+  <img src="images/figure_1_and_2.png" alt="Before and After using Prompt" width="100%" />
 </p>
 <p align="center">
     <strong>Figure 7: Before using Prompt</strong>
