@@ -16,6 +16,8 @@ This is the official PyTorch implementation of the paper "Transferring Prompts f
 
 This project provides the open-source code for the paper "Transferring Prompts for Cross Domain Cognitive Diagnosis," including datasets, model files, and running scripts used in the paper. Additionally, usage examples are provided to help users better understand and reproduce the experimental results.
 
+<img src="images/framework_00.png" alt="framework" width="100%">
+
 ## Install Dependencies
 
 Install all necessary dependencies via `requirements.txt`:
