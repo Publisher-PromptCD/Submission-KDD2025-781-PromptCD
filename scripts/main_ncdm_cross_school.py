@@ -1,23 +1,23 @@
-import argparse
+# coding: utf-8
 import logging
-import pandas as pd
-from ours.cross_school.KSCD_high import KSCD
+from sklearn.model_selection import train_test_split
+from ours.cross_school.NCDM import NCDM
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-from sklearn.model_selection import train_test_split
+import pandas as pd
 import numpy as np
-
-#--------------------------------------------------------
-parser = argparse.ArgumentParser(description='Your program description here.')
-parser.add_argument('--rate', type=float, default=0.2, help='Description of rate parameter')
-parser.add_argument('--pp_dim', type=int, default=20, help='Description of pp_dim parameter')
-parser.add_argument('--low_dim', type=int, default=20, help='Description of low_dim parameter')
-parser.add_argument('--batch_size', type=int, default=256, help='Description of batch_size parameter')
-parser.add_argument('--model_file', type=str, default="source_model/cross_school/kscd/temp.pth", help='')
-parser.add_argument('--target_model_file', type=str, default="target_model/cross_school/kscd/temp.pth", help='')
-parser.add_argument('--if_source_train', type=int, default=1, help='Description of if_source_train parameter')
-parser.add_argument('--if_target_migration', type=int, default=1, help='0 - Origin ，1 - Ours ，2 - ParTran')
-parser.add_argument('--folder', type=str, default='data1/B+C+D_A/', help='Folder path for data')
+import time
+import argparse
+#----------------------------------------------------------------------
+parser = argparse.ArgumentParser(description='Description of your program')
+parser.add_argument('--rate', type=float, default=0.2, help='The ratio for splitting cold start training exercises')
+parser.add_argument('--pp_dim', type=int, default=20, help='The dimension of prompts')
+parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training')
+parser.add_argument('--model_file', type=str, default="source_model/cross_school/ncdm/temp.pth", help='')
+parser.add_argument('--target_model_file', type=str, default="target_model/cross_school/ncdm/temp.pth", help='')
+parser.add_argument('--if_source_train', type=int, default=1, choices=[0, 1], help='Whether to train on the source domain (0 for no, 1 for yes)')
+parser.add_argument('--if_target_migration', type=int, default=1, choices=[0, 1, 2], help='(0 for Origin, 1 for ours, 2 for ParTrans)')
+parser.add_argument('--folder', type=str, default='../data/B+C+D_A/', help='Folder path for data')
 parser.add_argument('--source', type=str, default='schoolB,schoolC,schoolD', help='Names of source schools separated by comma')
 parser.add_argument('--target', type=str, default='schoolA', help='Name of target school')
 
@@ -32,7 +32,6 @@ if_target_migration = args.if_target_migration
 folder = args.folder
 source = args.source
 target = args.target
-low_dim  = args.low_dim
 target_model_file = args.target_model_file
 #-----------------------------------------------------------------
 Source_data = {}
@@ -76,6 +75,7 @@ t_user_n = np.max([np.max(Target_fine_tuning['user_id']), np.max(Target_test['us
 item_n = np.max(item['item_id'])
 knowledge_n = np.max(list(knowledge_set))
 
+
 def transform(user, item, item2knowledge, score, batch_size, knowledge_n, pp_dim):
     knowledge_emb = torch.zeros((len(item), knowledge_n))
     prompt_emb = torch.ones((len(item), pp_dim))  # -----------------------------------
@@ -93,11 +93,14 @@ def transform(user, item, item2knowledge, score, batch_size, knowledge_n, pp_dim
 
 def transform2(user, item, item2knowledge, score, k, batch_size,knowledge_n,pp_dim):
     knowledge_emb = torch.zeros((len(item), knowledge_n))
+    prompt_emb = torch.ones((len(item), pp_dim))
     for idx in range(len(item)):
         knowledge_emb[idx][np.array(item2knowledge[item[idx]]) - 1] = 1.0
+    combined_emb = torch.cat((prompt_emb, knowledge_emb), dim=1)
     item2 = item + k * item_n
     data_set = TensorDataset(
         torch.tensor(user, dtype=torch.int64) - 1,  # (1, user_n) to (0, user_n-1)
+        torch.tensor(item, dtype=torch.int64) - 1,
         torch.tensor(item2, dtype=torch.int64) - 1, # (1, item_n) to (0, item_n-1)
         knowledge_emb,
         torch.tensor(score, dtype=torch.float32)
@@ -108,11 +111,6 @@ def transform3(user, item, item2knowledge, score,batch_size,knowledge_n,pp_dim):
     knowledge_emb = torch.zeros((len(item), knowledge_n))
     for idx in range(len(item)):
         knowledge_emb[idx][np.array(item2knowledge[item[idx]]) - 1] = 1.0
-    indices_to_keep = []
-    for i, row in enumerate(knowledge_emb):
-        if not torch.all(row == 0):
-            indices_to_keep.append(i)
-    knowledge_emb_filtered = knowledge_emb[indices_to_keep]
 
     data_set = TensorDataset(
         torch.tensor(user, dtype=torch.int64) - 1,  # (1, user_n) to (0, user_n-1)
@@ -134,62 +132,60 @@ t_train_set, t_val_set, t_test_set = [
 
 logging.getLogger().setLevel(logging.INFO)
 
-cdm = KSCD(knowledge_n, item_n, s_user_n, t_user_n, low_dim, pp_dim,
+cdm = NCDM(knowledge_n, item_n, s_user_n, t_user_n, pp_dim,
            source_range, model_file, target_model_file)
 
 if if_source_train == 1:
     with open("record.txt", "a") as f:
         f.write(f"------------------------------------------------------\n"
-                f"KSCD Source domain training\n"
+                f"NCDM Source domain training\n"
                 f"Source: {source}, Target: {target}\n")
-    cdm.Source_train(s_train_set, s_test_set, device="cpu")
+    cdm.Source_train(s_train_set, s_test_set, device="cuda")
     with open("record.txt", "a") as f:
         f.write("-------------------------------------------------------\n")
     logging.info("Source domain training completed. ")
 
 if if_target_migration == 1:
-    cdm.Transfer_parameters(cdm.kscd_t_net, source_range)
+    cdm.Transfer_parameters(cdm.ncdm_t_net,source_range)
     logging.info("Transfer parameters to the target domain completed.")
     with open("record.txt", "a") as f:
         f.write(f"------------------------------------------------------\n"
-                f"KSCD--our\n"
+                f"NCDM--our\n"
                 f"Source: {source}, Target: {target}\n")
-    cdm.Target_train(cdm.kscd_t_net, t_train_set, t_val_set, epoch=100, device="cuda")
+    cdm.Target_train(cdm.ncdm_t_net, t_train_set, t_test_set, epoch=100, device="cuda")
     logging.info("Target domain training completed.")
-    cdm.kscd_t_net.load_state_dict(torch.load(target_model_file))
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.kscd_t_net, t_test_set)
+    cdm.ncdm_t_net.load_state_dict(torch.load(target_model_file))
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.ncdm_t_net, t_test_set)
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))
         f.write("-------------------------------------------------------\n")
 
 elif if_target_migration == 2:
-    cdm.Transfer_parameters(cdm.kscd_t_net2, source_range)
+    cdm.Transfer_parameters(cdm.ncdm_t_net2,source_range)
     logging.info("Transfer parameters to the target domain completed.")
     with open("record.txt", "a") as f:
         f.write(f"-------------------------------------------------------\n"
-                f"KSCD--ours++\n"
+                f"NCDM-ours++\n"
                 f"Source: {source}, Target: {target}\n")
-    cdm.Target_train(cdm.kscd_t_net2, t_train_set, t_val_set, epoch=100, device="cuda")
+    cdm.Target_train(cdm.ncdm_t_net2, t_train_set, t_test_set, epoch=100, device="cuda")
     logging.info("Target domain training completed.")
-    cdm.kscd_t_net2.load_state_dict(torch.load(target_model_file))
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.kscd_t_net2, t_test_set)
+    cdm.ncdm_t_net2.load_state_dict(torch.load(target_model_file))
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.ncdm_t_net2, t_test_set)
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))
         f.write("-------------------------------------------------------\n")
-
 else:
     with open("record.txt", "a") as f:
         f.write(f"-------------------------------------------------------\n"
-                f"KSCD-Origin\n"
+                f"NCDM-Origin\n"
                 f"Source: {source}, Target: {target}\n")
-    cdm.Target_train(cdm.kscd_t_net, t_train_set, t_val_set, epoch=100, device="cuda")
+    cdm.Target_train(cdm.ncdm_t_net, t_train_set, t_test_set, epoch=100, device="cuda")
     logging.info("Target domain training completed.")
-    cdm.kscd_t_net.load_state_dict(torch.load(target_model_file))
-    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.kscd_t_net, t_test_set)
+    cdm.ncdm_t_net.load_state_dict(torch.load(target_model_file))
+    auc, accuracy, rmse, f1 = cdm.Target_test(cdm.ncdm_t_net, t_test_set)
     with open("record.txt", "a") as f:
         f.write("Best AUC: %.6f, Best Accuracy: %.6f, Best RMSE: %.6f, Best F1: %.6f\n" % (
             auc, accuracy, rmse, f1))
         f.write("-------------------------------------------------------\n")
-
