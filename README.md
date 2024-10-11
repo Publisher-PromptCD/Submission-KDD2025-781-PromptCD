@@ -4,6 +4,8 @@ This is the official PyTorch implementation of the paper "Transferring Prompts f
 
 <img src="images/framework_00.png" alt="framework" width="100%">
 
+Figure 4: Overall architecture of the proposed PromptCD framework, including the pre-training and fine-tuning stages.
+
 ## Table of Contents
 
 - [Description](#description)
