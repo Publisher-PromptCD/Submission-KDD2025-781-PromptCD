@@ -67,27 +67,15 @@ python main_ncdm_cross_subject.py \
 
 To strengthen our research motivation, we included discussions on the performance of deep learning-based cognitive diagnosis models, emphasizing the difficulties encountered in cross-domain cognitive diagnosis (CDCD) scenarios. Below is an example using the KSCD model:
 
-<div style="text-align: center;">
-    <img src="images/Motivation_diagram.png" alt="KSCD Motivation diagram" width="50%">
-    <p><strong>Figure 2:KSCD Motivation Diagram</strong></p>
-</div>
+<img src="images/Motivation_diagram.png" alt="KSCD Motivation diagram" width="100%">
 
-<br>
-
-<div style="text-align: left;">
-  
-| Scenarios  | Source                      | Target          | 
-|------------|-----------------------------|-----------------|
-| Scenario A | 20% Mathematics              | 40% Mathematics |
-| Scenario B | 60% Mathematics              | 40% Mathematics |
-| Scenario C | 20% Mathematics + Physics    | 40% Mathematics |
-| Scenario D | 20% Mathematics + Chinese    | 40% Mathematics |
-
-</div>
-
-<div style="text-align: center;">
-    <p><strong>Table 1: Scenario Description</strong></p>
-</div>
+<p align="center">
+    <strong>Figure 1: KSCD Motivation diagram</strong>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <strong>Table 1: Scenario Description</strong>
+</p>
 
 We conducted experiments on the KSCD model using the SLP dataset for both intra-domain (A and B) and cross-domain (C and D) scenarios. The results are summarized as follows: 1) The performance in C and D is worse than in A and B, indicating that traditional models do not perform well in CDCD scenarios; 2) The performance in A is worse than in B, showing that overfitting to limited data is a significant issue; 3) The performance in D is significantly worse than in C, due to the larger distribution differences between Chinese and Mathematics compared to Physics and Mathematics, highlighting the model's sensitivity to the source domain in CDCD scenarios.
 
