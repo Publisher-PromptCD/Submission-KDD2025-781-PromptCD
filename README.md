@@ -67,14 +67,27 @@ python main_ncdm_cross_subject.py \
 
 To strengthen our research motivation, we included discussions on the performance of deep learning-based cognitive diagnosis models, emphasizing the difficulties encountered in cross-domain cognitive diagnosis (CDCD) scenarios. Below is an example using the KSCD model:
 
-<img src="images/Motivation_diagram.png" alt="KSCD Motivation diagram" width="50%">
+<div style="text-align: center;">
+    <img src="images/Motivation_diagram.png" alt="KSCD Motivation diagram" width="50%">
+    <p><strong>Figure 2:KSCD Motivation Diagram</strong></p>
+</div>
 
-| Scenarios  | Source                      | Target          |
+<br>
+
+<div style="text-align: left;">
+  
+| Scenarios  | Source                      | Target          | 
 |------------|-----------------------------|-----------------|
 | Scenario A | 20% Mathematics              | 40% Mathematics |
 | Scenario B | 60% Mathematics              | 40% Mathematics |
 | Scenario C | 20% Mathematics + Physics    | 40% Mathematics |
 | Scenario D | 20% Mathematics + Chinese    | 40% Mathematics |
+
+</div>
+
+<div style="text-align: center;">
+    <p><strong>Table 1: Scenario Description</strong></p>
+</div>
 
 We conducted experiments on the KSCD model using the SLP dataset for both intra-domain (A and B) and cross-domain (C and D) scenarios. The results are summarized as follows: 1) The performance in C and D is worse than in A and B, indicating that traditional models do not perform well in CDCD scenarios; 2) The performance in A is worse than in B, showing that overfitting to limited data is a significant issue; 3) The performance in D is significantly worse than in C, due to the larger distribution differences between Chinese and Mathematics compared to Physics and Mathematics, highlighting the model's sensitivity to the source domain in CDCD scenarios.
 
@@ -83,13 +96,28 @@ We conducted experiments on the KSCD model using the SLP dataset for both intra-
 We conducted Nemenyi tests on various baseline models used in different scenarios to report statistical significance for metrics such as AUC, ACC, RMSE, and F1. The specific results are as follows:
 
 <p align="center">
-  <img src="images/auc_no_cc.jpg" alt="AUC Significance Test" width="50%" />
-  <img src="images/acc_no_cc.jpg" alt="ACC Significance Test" width="50%" />
+  <img src="images/auc_and_acc.jpg" alt="AUC and ACC Significance Test" width="100%" />
+</p>
+<p align="center">
+    <strong>Figure 3: AUC Significance Test</strong>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <strong>Figure 4: ACC Significance Test</strong>
+</p>
+
+<br>
+
+<p align="center">
+  <img src="images/rmse_and_f1.jpg" alt="RMSE and F1 Significance Test" width="100%" />
 </p>
 
 <p align="center">
-  <img src="images/rmse_no_cc.jpg" alt="RMSE Significance Test" width="50%" />
-  <img src="images/f1_no_cc.jpg" alt="F1 Significance Test" width="50%" />
+    <strong>Figure 5: RMSE Significance Test</strong>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <strong>Figure 6: F1 Significance Test</strong>
 </p>
 
 From the analysis, we can see that the PromptCD model (especially the "Ours+" version) significantly outperforms other baseline models in multiple domains. This further validates the effectiveness and robustness of cross-domain prompt transfer methods in cognitive diagnosis tasks.
@@ -153,19 +181,6 @@ To provide a more comprehensive experiment, we included a comparison with the CC
 | KSCD-CC       | 0.854 | 0.855 | 0.327 | 0.915 |
 | KSCD-Ours     | 0.875 | 0.865 | 0.312 | 0.921 |
 | KSCD-Ours++   | 0.880 | 0.868 | 0.310 | 0.923 |
-
-
-We also conducted Nemenyi tests to report statistical significance. The results are as follows:
-
-<p align="center">
-  <img src="images/auc.jpg" alt="AUC Significance Test with CCLMF" width="50%" />
-  <img src="images/acc.jpg" alt="ACC Significance Test with CCLMF" width="50%" />
-</p>
-
-<p align="center">
-  <img src="images/rmse.jpg" alt="RMSE Significance Test with CCLMF" width="50%" />
-  <img src="images/f1.jpg" alt="F1 Significance Test with CCLMF" width="50%" />
-</p>
 
 The results, consistent with the previous analysis, show that the PromptCD model still has a significant performance advantage.
 
@@ -235,8 +250,17 @@ For the exercise aspect in the CDCD scenario, the following figure shows the dis
 
 #### Exercise-aspect
 
-<img src="images/Figure_1.png" alt="Before using Prompt" width="50%">
-<img src="images/Figure_2.png" alt="After using Prompt" width="50%">
+<p align="center">
+  <img src="images/Figure_1_and_2.png" alt="Before and After using Prompt" width="100%" />
+</p>
+<p align="center">
+    <strong>Figure 7: Before using Prompt</strong>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <strong>Figure 8: After using Prompt</strong>
+</p>
 
 In addition, we introduced two quantitative metrics—inter-cluster distance and intra-cluster distance—to demonstrate the changes in student and exercise embedding vectors before and after introducing PromptCD. These metrics provide a clearer illustration of the effectiveness of our method and ensure consistency in our presentation on both aspects.
 
