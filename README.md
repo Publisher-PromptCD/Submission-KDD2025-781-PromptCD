@@ -111,91 +111,36 @@ From the analysis, we can see that the PromptCD model (especially the "Ours+" ve
 
 To provide a more comprehensive experiment, we included a comparison with the CCLMF baseline method. The results are as follows:
 
-<div style="display: flex; justify-content: space-between; gap: 0px;">
-  
-  <div style="width: 50%;">
-    <p><strong>Source:</strong> Mathematics, Physics<br><strong>Target:</strong> Biology</p>
-    <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th>Metrics</th>
-          <th>AUC</th>
-          <th>ACC</th>
-          <th>RMSE</th>
-          <th>F1</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td><strong>IRT-Origin</strong></td><td>0.667</td><td>0.652</td><td>0.466</td><td>0.738</td></tr>
-        <tr><td><strong>IRT-Tech</strong></td><td>0.779</td><td>0.729</td><td>0.421</td><td>0.800</td></tr>
-        <tr><td><strong>IRT-Zero</strong></td><td>0.721</td><td>0.696</td><td>0.460</td><td>0.809</td></tr>
-        <tr><td><strong>IRT-CCLMF</strong></td><td>0.775</td><td>0.723</td><td>0.425</td><td>0.808</td></tr>
-        <tr><td><strong>IRT-Ours</strong></td><td>0.798</td><td>0.742</td><td><strong>0.411</strong></td><td>0.815</td></tr>
-        <tr><td><strong>IRT-Ours+</strong></td><td><strong>0.799</strong></td><td><strong>0.743</strong></td><td><strong>0.411</strong></td><td><strong>0.816</strong></td></tr>
-        <tr><td><strong>MIRT-Origin</strong></td><td>0.672</td><td>0.669</td><td>0.459</td><td>0.763</td></tr>
-        <tr><td><strong>MIRT-Tech</strong></td><td>0.779</td><td>0.727</td><td>0.422</td><td>0.797</td></tr>
-        <tr><td><strong>MIRT-Zero</strong></td><td>0.723</td><td>0.706</td><td>0.439</td><td>0.799</td></tr>
-        <tr><td><strong>MIRT-CCLMF</strong></td><td>0.771</td><td>0.726</td><td>0.426</td><td>0.805</td></tr>
-        <tr><td><strong>MIRT-Ours</strong></td><td>0.793</td><td>0.738</td><td>0.415</td><td><strong>0.816</strong></td></tr>
-        <tr><td><strong>MIRT-Ours+</strong></td><td><strong>0.801</strong></td><td><strong>0.743</strong></td><td><strong>0.411</strong></td><td>0.809</td></tr>
-        <tr><td><strong>NCDM-Origin</strong></td><td>0.706</td><td>0.655</td><td>0.456</td><td>0.724</td></tr>
-        <tr><td><strong>NCDM-Tech</strong></td><td>0.780</td><td>0.727</td><td>0.421</td><td>0.795</td></tr>
-        <tr><td><strong>NCDM-Zero</strong></td><td>0.734</td><td>0.697</td><td>0.437</td><td>0.792</td></tr>
-        <tr><td><strong>NCDM-CCLMF</strong></td><td>0.765</td><td>0.731</td><td>0.424</td><td>0.811</td></tr>
-        <tr><td><strong>NCDM-Ours</strong></td><td>0.785</td><td><strong>0.735</strong></td><td><strong>0.417</strong></td><td><strong>0.815</strong></td></tr>
-        <tr><td><strong>NCDM-Ours+</strong></td><td><strong>0.788</strong></td><td>0.731</td><td>0.418</td><td>0.812</td></tr>
-        <tr><td><strong>KSCD-Origin</strong></td><td>0.710</td><td>0.691</td><td>0.445</td><td>0.779</td></tr>
-        <tr><td><strong>KSCD-Tech</strong></td><td>0.778</td><td>0.729</td><td>0.422</td><td>0.799</td></tr>
-        <tr><td><strong>KSCD-Zero</strong></td><td>0.728</td><td>0.703</td><td>0.431</td><td>0.792</td></tr>
-        <tr><td><strong>KSCD-CCLMF</strong></td><td>0.782</td><td>0.732</td><td>0.420</td><td>0.799</td></tr>
-        <tr><td><strong>KSCD-Ours</strong></td><td>0.795</td><td><strong>0.741</strong></td><td><strong>0.413</strong></td><td><strong>0.818</strong></td></tr>
-        <tr><td><strong>KSCD-Ours+</strong></td><td><strong>0.796</strong></td><td>0.739</td><td>0.414</td><td>0.812</td></tr>
-      </tbody>
-    </table>
-  </div>
-  
-  <div style="width: 50%;">
-    <p><strong>Source:</strong> B-bin, C-bin, D-bin<br><strong>Target:</strong> A-bin</p>
-    <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th>Metrics</th>
-          <th>AUC</th>
-          <th>ACC</th>
-          <th>RMSE</th>
-          <th>F1</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td><strong>IRT-Origin</strong></td><td>0.670</td><td>0.800</td><td>0.393</td><td>0.884</td></tr>
-        <tr><td><strong>IRT-Tech</strong></td><td>0.821</td><td>0.847</td><td>0.336</td><td>0.912</td></tr>
-        <tr><td><strong>IRT-Zero</strong></td><td>0.855</td><td>0.854</td><td>0.324</td><td>0.917</td></tr>
-        <tr><td><strong>IRT-CCLMF</strong></td><td>0.887</td><td>0.833</td><td>0.325</td><td>0.909</td></tr>
-        <tr><td><strong>IRT-Ours</strong></td><td>0.871</td><td>0.867</td><td>0.316</td><td>0.922</td></tr>
-        <tr><td><strong>IRT-Ours+</strong></td><td><strong>0.881</strong></td><td><strong>0.872</strong></td><td><strong>0.308</strong></td><td><strong>0.925</strong></td></tr>
-        <tr><td><strong>MIRT-Origin</strong></td><td>0.718</td><td>0.820</td><td>0.372</td><td>0.896</td></tr>
-        <tr><td><strong>MIRT-Tech</strong></td><td>0.820</td><td>0.845</td><td>0.339</td><td>0.912</td></tr>
-        <tr><td><strong>MIRT-Zero</strong></td><td>0.841</td><td>0.841</td><td>0.347</td><td>0.902</td></tr>
-        <tr><td><strong>MIRT-CCLMF</strong></td><td>0.834</td><td>0.849</td><td>0.331</td><td>0.911</td></tr>
-        <tr><td><strong>MIRT-Ours</strong></td><td>0.861</td><td>0.859</td><td>0.324</td><td>0.917</td></tr>
-        <tr><td><strong>MIRT-Ours+</strong></td><td><strong>0.886</strong></td><td><strong>0.872</strong></td><td><strong>0.311</strong></td><td><strong>0.923</strong></td></tr>
-        <tr><td><strong>NCDM-Origin</strong></td><td>0.687</td><td>0.809</td><td>0.387</td><td>0.894</td></tr>
-        <tr><td><strong>NCDM-Tech</strong></td><td>0.818</td><td>0.845</td><td>0.340</td><td>0.910</td></tr>
-        <tr><td><strong>NCDM-Zero</strong></td><td>0.761</td><td>0.800</td><td>0.376</td><td>0.877</td></tr>
-        <tr><td><strong>NCDM-CCLMF</strong></td><td>0.844</td><td>0.851</td><td>0.332</td><td>0.911</td></tr>
-        <tr><td><strong>NCDM-Ours</strong></td><td><strong>0.879</strong></td><td><strong>0.866</strong></td><td><strong>0.316</strong></td><td><strong>0.918</strong></td></tr>
-        <tr><td><strong>NCDM-Ours+</strong></td><td>0.878</td><td>0.865</td><td>0.319</td><td><strong>0.920</strong></td></tr>
-        <tr><td><strong>KSCD-Origin</strong></td><td>0.764</td><td>0.831</td><td>0.368</td><td>0.901</td></tr>
-        <tr><td><strong>KSCD-Tech</strong></td><td>0.809</td><td>0.848</td><td>0.338</td><td>0.913</td></tr>
-        <tr><td><strong>KSCD-Zero</strong></td><td>0.778</td><td>0.806</td><td>0.346</td><td>0.877</td></tr>
-        <tr><td><strong>KSCD-CCLMF</strong></td><td>0.854</td><td>0.855</td><td>0.327</td><td>0.915</td></tr>
-        <tr><td><strong>KSCD-Ours</strong></td><td>0.875</td><td>0.865</td><td>0.312</td><td>0.921</td></tr>
-        <tr><td><strong>KSCD-Ours+</strong></td><td><strong>0.880</strong></td><td><strong>0.868</strong></td><td><strong>0.310</strong></td><td><strong>0.923</strong></td></tr>
-      </tbody>
-    </table>
-  </div>
-  
-</div>
+**The first four columns**:**Source:** Mathematics,Physics  **Target:** Biology
+<br>
+**The last four columns**:**Source:** B-bin,C-bin,D-bin  **Target:** A-bin
+| Metrics         | AUC   | ACC   | RMSE   | F1     | AUC   | ACC   | RMSE   | F1     |
+|-----------------|-------|-------|--------|--------|-------|-------|--------|--------|
+| **IRT-Origin**  | 0.667 | 0.652 | 0.466  | 0.738  | 0.670 | 0.800 | 0.393  | 0.884  |
+| **IRT-Tech**    | 0.779 | 0.729 | 0.421  | 0.800  | 0.821 | 0.847 | 0.336  | 0.912  |
+| **IRT-Zero**    | 0.721 | 0.696 | 0.460  | 0.809  | 0.855 | 0.854 | 0.324  | 0.917  |
+| **IRT-CCLMF**   | 0.775 | 0.723 | 0.425  | 0.808  | 0.887 | 0.833 | 0.325  | 0.909  |
+| **IRT-Ours**    | 0.798 | 0.742 | **0.411** | 0.815  | 0.871 | 0.867 | 0.316  | 0.922  |
+| **IRT-Ours+**   | **0.799** | **0.743** | **0.411** | **0.816** | **0.881** | **0.872** | **0.308** | **0.925** |
+| **MIRT-Origin** | 0.672 | 0.669 | 0.459  | 0.763  | 0.718 | 0.820 | 0.372  | 0.896  |
+| **MIRT-Tech**   | 0.779 | 0.727 | 0.422  | 0.797  | 0.820 | 0.845 | 0.339  | 0.912  |
+| **MIRT-Zero**   | 0.723 | 0.706 | 0.439  | 0.799  | 0.841 | 0.841 | 0.347  | 0.902  |
+| **MIRT-CCLMF**  | 0.771 | 0.726 | 0.426  | 0.805  | 0.834 | 0.849 | 0.331  | 0.911  |
+| **MIRT-Ours**   | 0.793 | 0.738 | 0.415  | **0.816** | 0.861 | 0.859 | 0.324  | 0.917  |
+| **MIRT-Ours+**  | **0.801** | **0.743** | **0.411** | 0.809  | **0.886** | **0.872** | **0.311** | **0.923** |
+| **NCDM-Origin** | 0.706 | 0.655 | 0.456  | 0.724  | 0.687 | 0.809 | 0.387  | 0.894  |
+| **NCDM-Tech**   | 0.780 | 0.727 | 0.421  | 0.795  | 0.818 | 0.845 | 0.340  | 0.910  |
+| **NCDM-Zero**   | 0.734 | 0.697 | 0.437  | 0.792  | 0.761 | 0.800 | 0.376  | 0.877  |
+| **NCDM-CCLMF**  | 0.765 | 0.731 | 0.424  | 0.811  | 0.844 | 0.851 | 0.332  | 0.911  |
+| **NCDM-Ours**   | 0.785 | **0.735** | **0.417** | **0.815** | **0.879** | **0.866** | **0.316** | **0.918** |
+| **NCDM-Ours+**  | **0.788** | 0.731 | 0.418  | 0.812  | 0.878 | 0.865 | 0.319  | **0.920** |
+| **KSCD-Origin** | 0.710 | 0.691 | 0.445  | 0.779  | 0.764 | 0.831 | 0.368  | 0.901  |
+| **KSCD-Tech**   | 0.778 | 0.729 | 0.422  | 0.799  | 0.809 | 0.848 | 0.338  | 0.913  |
+| **KSCD-Zero**   | 0.728 | 0.703 | 0.431  | 0.792  | 0.778 | 0.806 | 0.346  | 0.877  |
+| **KSCD-CCLMF**  | 0.782 | 0.732 | 0.420  | 0.799  | 0.854 | 0.855 | 0.327  | 0.915  |
+| **KSCD-Ours**   | 0.795 | **0.741** | **0.413** | **0.818** | 0.875 | 0.865 | 0.312  | 0.921  |
+| **KSCD-Ours+**  | **0.796** | 0.739 | 0.414  | 0.812  | **0.880** | **0.868** | **0.310** | **0.923** |
+
 
 The results, consistent with the previous analysis, show that the PromptCD model still has a significant performance advantage.
 
