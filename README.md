@@ -146,7 +146,7 @@ The results, consistent with the previous analysis, show that the PromptCD model
 
 ### Added Cross-Domain Scenarios
 
-We added two new experiments: from humanities to sciences, and from sciences to humanities. Our results show that in both cases, PromptCD outperforms the comparison algorithms.
+We added two new experiments: from humanities to sciences, and from sciences to humanities. Our results show that in both cases, PromptCD outperforms the comparison algorithms. Interestingly, we observed a slight performance decrease compared to the scenarios of humanities to sciences and sciences to sciences, which aligns with empirical expectations.
 
 **The first four columns**: **Source:** Biology, Mathematics  **Target:** Geography
 <br>
