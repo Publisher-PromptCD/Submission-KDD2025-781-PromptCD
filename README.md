@@ -111,7 +111,7 @@ From the analysis, we can see that the PromptCD model (especially the "Ours+" ve
 
 To provide a more comprehensive experiment, we included a comparison with the CCLMF baseline method. The results are as follows:
 
-<div style="display: flex; justify-content: space-between; gap: 20px;">
+<div style="display: flex; justify-content: space-between; gap: 10px;">
   
   <div style="width: 40%;">
     <p><strong>Source:</strong> Mathematics, Physics<br><strong>Target:</strong> Biology</p>
