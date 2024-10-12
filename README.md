@@ -113,7 +113,7 @@ To provide a more comprehensive experiment, we included a comparison with the CC
 
 <div style="display: flex; justify-content: space-between; gap: 20px;">
   
-  <div style="width: 48%;">
+  <div style="width: 40%;">
     <p><strong>Source:</strong> Mathematics, Physics<br><strong>Target:</strong> Biology</p>
     <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
       <thead>
@@ -154,7 +154,7 @@ To provide a more comprehensive experiment, we included a comparison with the CC
     </table>
   </div>
   
-  <div style="width: 48%;">
+  <div style="width: 40%;">
     <p><strong>Source:</strong> B-bin, C-bin, D-bin<br><strong>Target:</strong> A-bin</p>
     <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
       <thead>
