@@ -533,6 +533,7 @@ class NCDM:
         y_pred_binary = np.array(y_pred) >= 0.5
         f1 = f1_score(y_true, y_pred_binary)
 
+
         auc = roc_auc_score(y_true, y_pred)
         accuracy = accuracy_score(y_true, y_pred_binary)
 
